@@ -39,29 +39,24 @@ public class JbootMotanrpc extends JbootrpcBase {
 
         jbootrpcConfig = Jboot.config(JbootrpcConfig.class);
 
-        initProtocolConfig();
-        initRegistryConfig();
-
-    }
-
-    private void initProtocolConfig() {
-        protocolConfig = new ProtocolConfig();
-        protocolConfig.setId("motan");
-        protocolConfig.setName("motan");
-        protocolConfig.setSerialization("jboot");
-    }
-
-    private void initRegistryConfig() {
         registryConfig = new RegistryConfig();
         registryConfig.setRegProtocol(jbootrpcConfig.getRegistryType());
         registryConfig.setAddress(jbootrpcConfig.getRegistryAddress());
         registryConfig.setName(jbootrpcConfig.getRegistryName());
+
+
+        protocolConfig = new ProtocolConfig();
+        protocolConfig.setId("motan");
+        protocolConfig.setName("motan");
+        protocolConfig.setSerialization("jboot");
+
     }
+
 
     @Override
     public <T> T serviceObtain(Class<T> serviceClass, String group, String version) {
 
-        String key = String.format("%s:%s", serviceClass.getName(), version);
+        String key = String.format("%s:%s:%s", serviceClass.getName(), group, version);
 
         T object = (T) singletons.get(key);
         if (object != null) {
@@ -76,7 +71,7 @@ public class JbootMotanrpc extends JbootrpcBase {
         // 配置服务的group以及版本号
         refererConfig.setGroup(group);
         refererConfig.setVersion(version);
-        refererConfig.setRequestTimeout(jbootrpcConfig.getRequestTimeOutAsInt());
+        refererConfig.setRequestTimeout(jbootrpcConfig.getRequestTimeOut());
         initConfig(refererConfig);
 
         object = refererConfig.getRef();

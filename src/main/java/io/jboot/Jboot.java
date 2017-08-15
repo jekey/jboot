@@ -16,7 +16,6 @@
 package io.jboot;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.inject.Injector;
 import io.jboot.aop.JbootInjectManager;
 import io.jboot.component.metrics.JbootMetricsManager;
 import io.jboot.component.redis.JbootRedis;
@@ -31,6 +30,7 @@ import io.jboot.core.http.JbootHttpResponse;
 import io.jboot.core.mq.Jbootmq;
 import io.jboot.core.mq.JbootmqManager;
 import io.jboot.core.rpc.Jbootrpc;
+import io.jboot.core.rpc.JbootrpcConfig;
 import io.jboot.core.rpc.JbootrpcManager;
 import io.jboot.core.serializer.ISerializer;
 import io.jboot.core.serializer.SerializerManager;
@@ -269,8 +269,13 @@ public class Jboot {
     }
 
 
+    private JbootrpcConfig rpcConfig;
+
     public <T> T service(Class<T> clazz) {
-        return service(clazz, "jboot", "1.0");
+        if (rpcConfig == null) {
+            rpcConfig = config(JbootrpcConfig.class);
+        }
+        return service(clazz, rpcConfig.getDefaultGroup(), rpcConfig.getDefaultVersion());
     }
 
     public <T> T service(Class<T> clazz, String group, String version) {
@@ -381,13 +386,25 @@ public class Jboot {
     }
 
 
+//    /**
+//     * 获取 injector
+//     *
+//     * @return
+//     */
+//    public Injector getInjector() {
+//        return JbootInjectManager.me().getInjector();
+//    }
+
+
     /**
-     * 获取 injector
+     * 获取被增强的，可以使用AOP注入的
      *
+     * @param clazz
+     * @param <T>
      * @return
      */
-    public Injector getInjector() {
-        return JbootInjectManager.me().getInjector();
+    public static <T> T bean(Class<T> clazz) {
+        return JbootInjectManager.me().getInjector().getInstance(clazz);
     }
 
 

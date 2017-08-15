@@ -17,6 +17,7 @@ package io.jboot.core.rpc;
 
 import io.jboot.Jboot;
 import io.jboot.core.mq.JbootmqMessageListener;
+import io.jboot.core.rpc.dubbo.JbootDubborpc;
 import io.jboot.core.spi.JbootSpiManager;
 import io.jboot.event.JbootEventListener;
 import io.jboot.exception.JbootAssert;
@@ -37,9 +38,6 @@ import java.util.List;
 public class JbootrpcManager {
     private static JbootrpcManager manager;
 
-    private JbootrpcManager() {
-        config = Jboot.config(JbootrpcConfig.class);
-    }
 
     public static JbootrpcManager me() {
         if (manager == null) {
@@ -50,7 +48,7 @@ public class JbootrpcManager {
 
 
     private Jbootrpc jbootrpc;
-    private JbootrpcConfig config;
+    private JbootrpcConfig config = Jboot.config(JbootrpcConfig.class);;
 
     public Jbootrpc getJbootrpc() {
         if (jbootrpc == null) {
@@ -74,7 +72,7 @@ public class JbootrpcManager {
 
             String group = StringUtils.isBlank(rpcService.group()) ? config.getDefaultGroup() : rpcService.group();
             String version = StringUtils.isBlank(rpcService.version()) ? config.getDefaultVersion() : rpcService.version();
-            int port = rpcService.port() <= 0 ? Integer.valueOf(config.getDefaultPort()) : rpcService.port();
+            int port = rpcService.port() <= 0 ? config.getDefaultPort() : rpcService.port();
 
             Class[] inters = clazz.getInterfaces();
             JbootAssert.assertFalse(inters == null || inters.length == 0,
@@ -87,7 +85,7 @@ public class JbootrpcManager {
                     if (ex == inter) exclude = true;
                 }
                 if (exclude) continue;
-                getJbootrpc().serviceExport(inter, Jboot.me().getInjector().getInstance(clazz), group, version, port);
+                getJbootrpc().serviceExport(inter, Jboot.bean(clazz), group, version, port);
             }
         }
     }
@@ -104,6 +102,8 @@ public class JbootrpcManager {
                 return new JbootThriftrpc();
             case JbootrpcConfig.TYPE_LOCAL:
                 return new JbootLocalrpc();
+            case JbootrpcConfig.TYPE_DUBBO:
+                return new JbootDubborpc();
             default:
                 return JbootSpiManager.me().spi(Jbootrpc.class, config.getType());
         }
