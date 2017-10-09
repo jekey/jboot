@@ -34,9 +34,10 @@ public class JbootServiceBase<M extends JbootModel<M>> {
 
 
     public M DAO = null;
+
     public JbootServiceBase() {
         Class<M> modelClass = null;
-        Type t = getClass().getGenericSuperclass();
+        Type t = getUsefulClass(getClass()).getGenericSuperclass();
         if (t instanceof ParameterizedType) {
             Type[] p = ((ParameterizedType) t).getActualTypeArguments();
             modelClass = (Class<M>) p[0];
@@ -48,6 +49,12 @@ public class JbootServiceBase<M extends JbootModel<M>> {
 
         DAO = ClassNewer.newInstance(modelClass).dao();
     }
+
+
+    private static Class<?> getUsefulClass(Class<?> modelClass) {
+        return modelClass.getName().indexOf("EnhancerBy") == -1 ? modelClass : modelClass.getSuperclass();
+    }
+
 
     public M getDao() {
         return DAO;
@@ -82,7 +89,7 @@ public class JbootServiceBase<M extends JbootModel<M>> {
      * @param model
      * @return
      */
-    public boolean delete(JbootModel<?> model) {
+    public boolean delete(M model) {
         return model.delete();
     }
 
@@ -93,7 +100,7 @@ public class JbootServiceBase<M extends JbootModel<M>> {
      * @param model
      * @return
      */
-    public boolean save(JbootModel<?> model) {
+    public boolean save(M model) {
         return model.save();
     }
 
@@ -103,7 +110,7 @@ public class JbootServiceBase<M extends JbootModel<M>> {
      * @param model
      * @return
      */
-    public boolean saveOrUpdate(JbootModel<?> model) {
+    public boolean saveOrUpdate(M model) {
         return model.saveOrUpdate();
     }
 
@@ -113,7 +120,7 @@ public class JbootServiceBase<M extends JbootModel<M>> {
      * @param model
      * @return
      */
-    public boolean update(JbootModel<?> model) {
+    public boolean update(M model) {
         return model.update();
     }
 

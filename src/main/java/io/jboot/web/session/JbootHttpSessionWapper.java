@@ -33,8 +33,6 @@ public class JbootHttpSessionWapper implements HttpSession {
     private static final long SESSION_TIME = TimeUnit.DAYS.toSeconds(2);
     private static final String SESSION_CACHE_NAME = "SESSION";
 
-    HttpSession baseSession;
-
     @Override
     public long getCreationTime() {
         return 0;
@@ -127,12 +125,18 @@ public class JbootHttpSessionWapper implements HttpSession {
     }
 
     private String getOrCreatSessionId() {
-        String sessionid = ("JSESSIONID");
+        String sessionid = getCookie("JSESSIONID");
+        if (StringUtils.isNotBlank(sessionid)) {
+            return sessionid;
+        }
+
+        sessionid = RequestManager.me().getRequestAttr("JSESSIONID");
         if (StringUtils.isNotBlank(sessionid)) {
             return sessionid;
         }
 
         sessionid = UUID.randomUUID().toString().replace("-", "");
+        RequestManager.me().setRequestAttr("JSESSIONID", sessionid);
         setCookie("JSESSIONID", sessionid, (int) SESSION_TIME);
         return sessionid;
     }

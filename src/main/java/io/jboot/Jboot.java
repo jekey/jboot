@@ -179,15 +179,25 @@ public class Jboot {
     }
 
     private void printBannerInfo() {
+        System.out.println(getBannerText());
+    }
+
+    private String getBannerText() {
         JbootConfig config = getJbootConfig();
 
         if (!config.isBannerEnable()) {
-            return;
+            return "";
         }
 
         File bannerFile = new File(getRootClassPath(), config.getBannerFile());
+        if (bannerFile.exists() && bannerFile.canRead()) {
+            String bannerFileText = FileUtils.readString(bannerFile);
+            if (StringUtils.isNotBlank(bannerFileText)) {
+                return bannerFileText;
+            }
+        }
 
-        String bannerText = "  ____  ____    ___    ___   ______ \n" +
+        return "  ____  ____    ___    ___   ______ \n" +
                 " |    ||    \\  /   \\  /   \\ |      |\n" +
                 " |__  ||  o  )|     ||     ||      |\n" +
                 " __|  ||     ||  O  ||  O  ||_|  |_|\n" +
@@ -195,13 +205,6 @@ public class Jboot {
                 "\\  `  ||     ||     ||     |  |  |  \n" +
                 " \\____||_____| \\___/  \\___/   |__|  \n" +
                 "                                    ";
-
-        if (bannerFile.exists() && bannerFile.canRead()) {
-            String bannerFileText = FileUtils.readString(bannerFile);
-            bannerText = StringUtils.isNotBlank(bannerFileText) ? bannerFileText : bannerText;
-        }
-
-        System.out.println(bannerText);
 
     }
 
@@ -365,7 +368,7 @@ public class Jboot {
      */
     public JbootRedis getRedis() {
         if (jbootRedis == null) {
-            jbootRedis = JbootRedisManager.me().getReidis();
+            jbootRedis = JbootRedisManager.me().getRedis();
         }
         return jbootRedis;
     }
@@ -386,16 +389,6 @@ public class Jboot {
     }
 
 
-//    /**
-//     * 获取 injector
-//     *
-//     * @return
-//     */
-//    public Injector getInjector() {
-//        return JbootInjectManager.me().getInjector();
-//    }
-
-
     /**
      * 获取被增强的，可以使用AOP注入的
      *
@@ -408,8 +401,18 @@ public class Jboot {
     }
 
 
+    /**
+     * 对某个对象内部的变量进行注入
+     *
+     * @param object
+     */
+    public static void injectMembers(Object object) {
+        JbootInjectManager.me().getInjector().injectMembers(object);
+    }
+
+
     public ISerializer getSerializer() {
-        return SerializerManager.me().getSerializer();
+        return SerializerManager.me().getSerializer(getJbootConfig().getSerializer());
     }
 
 

@@ -63,6 +63,10 @@ public class JbootAppConfig extends JFinalConfig {
     static final Log log = Log.getLog(JbootAppConfig.class);
     private List<Routes.Route> routeList = new ArrayList<>();
 
+    public JbootAppConfig() {
+        Jboot.injectMembers(this);
+    }
+
 
     @Override
     public void configConstant(Constants constants) {
@@ -213,6 +217,7 @@ public class JbootAppConfig extends JFinalConfig {
          */
         Jboot.me().sendEvent(Jboot.EVENT_STARTED, null);
 
+        JbootAppListenerManager.me().onJFinalStarted();
         JbootAppListenerManager.me().onJbootStarted();
 
     }

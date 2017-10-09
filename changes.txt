@@ -1,3 +1,41 @@
+jboot-1.0-beta9:
+修复：cron4j 注解配置会抛出异常的bug。 close #IF5U1:关于cron4j使用注解创建的问题
+修复：在使用JbootServiceBase作为service层的基类时，通过注入的方式初始化会造成初始化失败的问题。
+新增：RPC直连模式调用的支持。
+
+
+
+
+jboot-1.0-beta8:
+新增：RPC模块支持自定义序列化，可以和Jboot本身的序列化不共享同一个序列化对象。
+修复：在使用redis作为默认缓存的情况下，根据主键查询一个不存在的数据可能会抛出NullPointerException的问题。
+依赖更新：metrics ->3.2.5，HikariCP ->2.7.1 ， fastjson -> 1.2.38 ，fst -> 2.53，dubbo->2.5.5。
+
+
+
+
+jboot-1.0-beta7:
+新增：多数据源情况下，是否添加表映射的配置支持。
+新增：websocket的支持，更新依赖。
+修复：启用分布式session的情况下，在同一个request里setSession又去getSession 得到空值的bug
+修复：修改方法名 RedisManager.getReidis() 为 RedisManager.getRedis()
+优化：appassembler-maven-plugin插件打包jar存放的目录由lib修改为libs
+优化：删除 无用的 JbootSessionManager 类
+更新：分布式session的相关文档。
+更新：dubbo到最新版本2.5.4
+更新：undertow到最新版本1.4.20.Final
+
+
+
+jboot-1.0-beta6:
+1、添加JbootServiceBase，方便在Jboot APP中对service的编写工作。
+2、添加JbootServiceGenerator用于对Service层的代码生成。
+3、优化Jboot代码生成逻辑，使之代码更加简洁。
+4、优化配置文件读取可以读取没有前缀的配置信息，同时可以不需要@PropertieConfig 注解的配置。
+5、修复：在 JDK9 下编译失败的问题，JDK9 添加新的类java.lang.Module，导致类引入不明。
+6、更新shiro相关的文档内容。
+
+
 jboot-1.0-beta5:
 1、新增：在分库的时候，可以给每个数据源排除表配置的支持。
 2、新增：@Cron4jTask 注解无法使用在ProcessTask和Task类的问题。
