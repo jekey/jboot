@@ -18,6 +18,10 @@ package io.jboot.server.listener;
 import com.jfinal.config.*;
 import com.jfinal.log.Log;
 import com.jfinal.template.Engine;
+import io.jboot.aop.jfinal.JfinalHandlers;
+import io.jboot.aop.jfinal.JfinalPlugins;
+import io.jboot.server.ContextListeners;
+import io.jboot.server.Servlets;
 import io.jboot.utils.ClassNewer;
 import io.jboot.utils.ClassScanner;
 
@@ -57,6 +61,17 @@ public class JbootAppListenerManager implements JbootAppListener {
 
 
     @Override
+    public void onJbootDeploy(Servlets servlets, ContextListeners listeners) {
+        for (JbootAppListener listener : this.listeners) {
+            try {
+                listener.onJbootDeploy(servlets,listeners);
+            } catch (Throwable ex) {
+                log.error(ex.toString(), ex);
+            }
+        }
+    }
+
+    @Override
     public void onJfinalConstantConfig(Constants constants) {
         for (JbootAppListener listener : listeners) {
             try {
@@ -90,7 +105,7 @@ public class JbootAppListenerManager implements JbootAppListener {
     }
 
     @Override
-    public void onJfinalPluginConfig(Plugins plugins) {
+    public void onJfinalPluginConfig(JfinalPlugins plugins) {
         for (JbootAppListener listener : listeners) {
             try {
                 listener.onJfinalPluginConfig(plugins);
@@ -112,7 +127,7 @@ public class JbootAppListenerManager implements JbootAppListener {
     }
 
     @Override
-    public void onHandlerConfig(Handlers handlers) {
+    public void onHandlerConfig(JfinalHandlers handlers) {
         for (JbootAppListener listener : listeners) {
             try {
                 listener.onHandlerConfig(handlers);

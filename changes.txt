@@ -1,3 +1,74 @@
+jboot-1.0-rc.4:
+新增： Opentracing 模块 和 默认的 zipkin 实现，用于对分布式 RPC 的追踪支持。
+新增：注解 EnableTracing ，方便通过 Opentracing 给 Jfinal 的 action 添加数据追踪。
+新增：motan 和 dubbo 默认对 Opentracing 数据追踪的支持。
+新增：Opentracing 的相关文档。
+新增：为JbootModel 默认添加 findAll 方法。
+新增：service代码生成自动添加注解 @Bean ，方便 @Inject后就可以直接使用 。
+优化：给没有JbootModel相关没必要序列化的字段添加 transient 修饰。
+优化：完善 RPC 、opentracing 、hystrix 的相关测试和文档。
+修复：当启用 Opentracing 的同时 启用 Hystrix，会出现 Opentracing 追踪断裂的bug。
+修复：注解 @Before(Tx.class) 应用在类上的时候，事务回滚失败的bug。
+修复：oracle、sqlserver、postgresql的Dialect（方言）的limit数据错误的问题。
+修复：当调用Cache.removeAll()去移除一个不存在的key时，会出现redis错误的bug。
+修复：RPC远程调用在直连模式下无法获取service的bug。
+
+
+
+
+jboot-1.0-rc.3:
+新增：添加servlet相关的配置，支持之定义servlet。
+新增：新增RPC是否自动走Hystrix的相关配置支持
+新增：新增RPC 代理的配置，jboot.rpc.proxy
+新增：findFirstByColumns方法，根据多列和值查询一条数据
+优化：重构Shiro相关的AuthorizeResult，使用不被删除的方法。
+修复：service层代码生成器出现导报错误的bug
+修复：http post请求时，请求类型判断错误的bug
+修复：通过Jboot.me().getMetrics进行统计后，在浏览器浏览的数据不正确的问题。
+
+
+
+jboot-1.0-rc.2:
+新增：hystrix 自动监控和熔断对dubbo的支持
+新增：hystrix 的keys配置，方便RPC调用的时候对方法的监控和熔断
+新增：motan的自定义代理，方便今后扩展对客户端调用的监控
+新增：Jfinal的Plugin和Handler的自动注入功能
+新增：JbootModel的columns查询对AnsiSql、Orcacle、PostgreSql、Sqlite3、SqlServer的支持
+新增：升级dubbo到最新版本2.5.6，支持dubbo通信框架netty4的配置
+优化：重构SPI加载，使代码更加简洁易懂
+优化：完善Jboot SPI 扩展功能的注释和说明
+优化：重构 注解 @EnableHystrixCommand ，不允许其使用在Controller的字段上，造成误解。
+优化：完善Hystrix功能，在客户端（例如：Controller）可以调用 Jboot.hystrix(key,runable) 轻易的通过 hystrix 进行接管。
+优化：web相关拦截器和处理器的注入功能
+优化：重构Jboot的核心类 Jboot.java，把其工具方法全部修改为静态方法。
+优化：重构JbootModel，使Column查询其支持任何的数据库，同时JbootModel代码更加简洁
+优化：参数非空验证的拦截器 ParaValidateInterceptor 代码
+修复：hystrix注解多个key时，其他key的统计失效的问题
+修复：JFinal 指令 Directive 无法进行自动注入的问题
+修复：Shiro相关文档里的指令大小写错误的问题
+修复：Undertow Server在启动的时候出现异常（比如端口号被占用）等，可能出现空指针异常的bug
+修复：CDN配置自适应http和https时，出现的重复添加CDN前缀的问题。
+文档：完善分库分表文档
+文档：完善shiro相关文档
+文档：完善MQ消息队列文档
+文档：完善RPC远程调用相关文档
+文档：完善项目构建文档
+文档：完善JbootEvent事件机制文档
+其他：依赖升级 dubbo ->2.5.6；fst->2.54
+
+
+
+jboot-1.0-rc.1:
+新增：数据库分表的支持（之前已经完成对多数据源分库的支持），分表支持依赖于sharding-jdbc
+新增：分库分表相关的使用文档
+新增：对拦截器自动注入功能的支持
+优化：Cookie的加密工具配置加密key为选配，当没配置的时候不会抛出异常，只是会发出警告。
+优化：优化拦截器注入性能
+优化：重构AOP对jfinal 的 Controller和interceptor 注入工作，代码更加容易理解。
+依赖更新：HikariCP -> 2.7.2 ；fastjson -> 1.2.38
+
+
+
 jboot-1.0-beta9:
 修复：cron4j 注解配置会抛出异常的bug。 close #IF5U1:关于cron4j使用注解创建的问题
 修复：在使用JbootServiceBase作为service层的基类时，通过注入的方式初始化会造成初始化失败的问题。

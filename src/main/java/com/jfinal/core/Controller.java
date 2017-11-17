@@ -16,17 +16,6 @@
 
 package com.jfinal.core;
 
-import java.io.File;
-import java.text.ParseException;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import com.jfinal.aop.Enhancer;
 import com.jfinal.aop.Interceptor;
 import com.jfinal.core.converter.TypeConverter;
@@ -38,6 +27,18 @@ import com.jfinal.render.RenderManager;
 import com.jfinal.upload.MultipartRequest;
 import com.jfinal.upload.UploadFile;
 
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.io.File;
+import java.text.ParseException;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
 /**
  * Controller
  * <br>
@@ -48,19 +49,45 @@ import com.jfinal.upload.UploadFile;
 @SuppressWarnings({"unchecked", "rawtypes"})
 public abstract class Controller {
 	
+	private Action action;
+	
 	private HttpServletRequest request;
 	private HttpServletResponse response;
 	
 	private String urlPara;
 	private String[] urlParaArray;
 	
+	private Render render;
+	
+	private static final RenderManager renderManager = RenderManager.me();
+	
 	private static final String[] NULL_URL_PARA_ARRAY = new String[0];
 	private static final String URL_PARA_SEPARATOR = Config.getConstants().getUrlParaSeparator();
 	
-	void init(HttpServletRequest request, HttpServletResponse response, String urlPara) {
+	void init(Action action, HttpServletRequest request, HttpServletResponse response, String urlPara) {
+		this.action = action;
 		this.request = request;
 		this.response = response;
 		this.urlPara = urlPara;
+		urlParaArray = null;
+		render = null;
+	}
+	
+	void clear() {
+		action = null;
+		request = null;
+		response = null;
+		urlPara = null;
+		urlParaArray = null;
+		render = null;
+	}
+	
+	public String getControllerKey() {
+		return action.getControllerKey();
+	}
+	
+	public String getViewPath() {
+		return action.getViewPath();
 	}
 	
 	public void setHttpServletRequest(HttpServletRequest request) {
@@ -949,12 +976,6 @@ public abstract class Controller {
 	
 	// ----------------
 	// render below ---
-	private static final RenderManager renderManager = RenderManager.me();
-	
-	/**
-	 * Hold Render object when invoke renderXxx(...)
-	 */
-	private Render render;
 	
 	public Render getRender() {
 		return render;
@@ -980,6 +1001,9 @@ public abstract class Controller {
 	 * 2: Generate email, short message and so on
 	 */
 	public String renderToString(String template, Map data) {
+		if (template.charAt(0) != '/') {
+			template = action.getViewPath() + template;
+		}
 		return renderManager.getEngine().getTemplate(template).renderToString(data);
 	}
 	

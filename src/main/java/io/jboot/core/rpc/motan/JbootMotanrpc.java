@@ -16,7 +16,10 @@
 package io.jboot.core.rpc.motan;
 
 import com.weibo.api.motan.common.MotanConstants;
-import com.weibo.api.motan.config.*;
+import com.weibo.api.motan.config.ProtocolConfig;
+import com.weibo.api.motan.config.RefererConfig;
+import com.weibo.api.motan.config.RegistryConfig;
+import com.weibo.api.motan.config.ServiceConfig;
 import com.weibo.api.motan.util.MotanSwitcherUtil;
 import io.jboot.Jboot;
 import io.jboot.core.rpc.JbootrpcBase;
@@ -40,26 +43,31 @@ public class JbootMotanrpc extends JbootrpcBase {
     public JbootMotanrpc() {
 
         jbootrpcConfig = Jboot.config(JbootrpcConfig.class);
-
+        registryConfig = new RegistryConfig();
+        registryConfig.setCheck(String.valueOf(jbootrpcConfig.isRegistryCheck()));
 
         /**
          * 注册中心的调用模式
          */
         if (jbootrpcConfig.isRegistryCallMode()) {
-            registryConfig = new RegistryConfig();
-            registryConfig.setRegProtocol(jbootrpcConfig.getRegistryType());
+
+            // 如果配置为consul，那么使用jboot自己实现的 JbootConsulRegistryFactory ，原生的无法注册在 consul 1.0 版本。
+            if (JbootrpcConfig.REGISTRY_TYPE_CONSUL.equals(jbootrpcConfig.getRegistryType())) {
+                registryConfig.setRegProtocol("jbootconsul");
+            } else {
+                registryConfig.setRegProtocol(jbootrpcConfig.getRegistryType());
+            }
+
+
             registryConfig.setAddress(jbootrpcConfig.getRegistryAddress());
             registryConfig.setName(jbootrpcConfig.getRegistryName());
         }
 
-
         /**
-         * 直连调用模式
+         * 直连模式
          */
-        if (jbootrpcConfig.isRedirectCallMode()) {
-            if (StringUtils.isBlank(jbootrpcConfig.getDirectUrl())) {
-                throw new JbootException("directUrl must not be null if you use redirect call mode，please config jboot.rpc.directUrl value");
-            }
+        else if (jbootrpcConfig.isRedirectCallMode()) {
+            registryConfig.setRegProtocol("local");
         }
 
 
@@ -67,6 +75,7 @@ public class JbootMotanrpc extends JbootrpcBase {
         protocolConfig.setId("motan");
         protocolConfig.setName("motan");
         protocolConfig.setSerialization("jboot");
+        protocolConfig.setFilter("jbootHystrix,jbootOpentracing");
 
     }
 
@@ -91,6 +100,8 @@ public class JbootMotanrpc extends JbootrpcBase {
         refererConfig.setVersion(version);
         refererConfig.setRequestTimeout(jbootrpcConfig.getRequestTimeOut());
         refererConfig.setProtocol(protocolConfig);
+        refererConfig.setProxy(jbootrpcConfig.getProxy());
+        refererConfig.setCheck(String.valueOf(jbootrpcConfig.isConsumerCheck()));
 
         /**
          * 注册中心模式
@@ -98,10 +109,14 @@ public class JbootMotanrpc extends JbootrpcBase {
         if (jbootrpcConfig.isRegistryCallMode()) {
             refererConfig.setRegistry(registryConfig);
         }
+
         /**
          * 直连模式
          */
         else if (jbootrpcConfig.isRedirectCallMode()) {
+            if (StringUtils.isBlank(jbootrpcConfig.getDirectUrl())) {
+                throw new JbootException("directUrl must not be null if you use redirect call mode，please config jboot.rpc.directUrl value");
+            }
             refererConfig.setDirectUrl(jbootrpcConfig.getDirectUrl());
         }
 
@@ -122,9 +137,7 @@ public class JbootMotanrpc extends JbootrpcBase {
             MotanSwitcherUtil.setSwitcherValue(MotanConstants.REGISTRY_HEARTBEAT_SWITCHER, false);
 
             ServiceConfig<T> motanServiceConfig = new ServiceConfig<T>();
-            if (jbootrpcConfig.isRegistryCallMode()) {
-                motanServiceConfig.setRegistry(registryConfig);
-            }
+            motanServiceConfig.setRegistry(registryConfig);
 
             motanServiceConfig.setProtocol(protocolConfig);
 
@@ -133,12 +146,19 @@ public class JbootMotanrpc extends JbootrpcBase {
             motanServiceConfig.setRef((T) object);
 
             // 配置服务的group以及版本号
+            if (StringUtils.isNotBlank(jbootrpcConfig.getHost())) {
+                motanServiceConfig.setHost(jbootrpcConfig.getHost());
+            }
             motanServiceConfig.setGroup(group);
             motanServiceConfig.setVersion(version);
 
             motanServiceConfig.setShareChannel(true);
             motanServiceConfig.setExport(String.format("motan:%s", port));
+            motanServiceConfig.setCheck(String.valueOf(jbootrpcConfig.isProviderCheck()));
+
+
             motanServiceConfig.export();
+
 
             MotanSwitcherUtil.setSwitcherValue(MotanConstants.REGISTRY_HEARTBEAT_SWITCHER, true);
         }

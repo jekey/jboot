@@ -1,3 +1,18 @@
+/**
+ * Copyright (c) 2015-2017, Michael Yang 杨福海 (fuhai999@gmail.com).
+ * <p>
+ * Licensed under the GNU Lesser General Public License (LGPL) ,Version 3.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.gnu.org/licenses/lgpl-3.0.txt
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package io.jboot.config;
 
 import io.jboot.config.annotation.PropertieConfig;
@@ -16,17 +31,22 @@ public class JbootConfigConfig {
     /**
      * 远程配置的网址
      */
-    private boolean remoteUrl;
+    private String remoteUrl;
 
     /**
      * 是否把本应用配置为远程配置的服务器
      */
-    private boolean configServer = false;
+    private boolean serverEnable = false;
 
     /**
-     * 给远程提供的配置文件
+     * 给远程提供的配置文件的路径，多个用分号（；）隔开
      */
-    private String configFile;
+    private String path;
+
+    /**
+     * 要排除的配置文件
+     */
+    private String exclude;
 
 
     public boolean isRemoteEnable() {
@@ -37,27 +57,35 @@ public class JbootConfigConfig {
         this.remoteEnable = remoteEnable;
     }
 
-    public boolean isRemoteUrl() {
+    public String getRemoteUrl() {
         return remoteUrl;
     }
 
-    public void setRemoteUrl(boolean remoteUrl) {
+    public void setRemoteUrl(String remoteUrl) {
         this.remoteUrl = remoteUrl;
     }
 
-    public boolean isConfigServer() {
-        return configServer;
+    public boolean isServerEnable() {
+        return serverEnable;
     }
 
-    public void setConfigServer(boolean configServer) {
-        this.configServer = configServer;
+    public void setServerEnable(boolean serverEnable) {
+        this.serverEnable = serverEnable;
     }
 
-    public String getConfigFile() {
-        return configFile;
+    public String getPath() {
+        return path;
     }
 
-    public void setConfigFile(String configFile) {
-        this.configFile = configFile;
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public String getExclude() {
+        return exclude;
+    }
+
+    public void setExclude(String exclude) {
+        this.exclude = exclude;
     }
 }

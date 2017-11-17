@@ -16,8 +16,9 @@
 package io.jboot.aop.interceptor;
 
 
-import com.netflix.hystrix.HystrixCommand;
-import com.netflix.hystrix.HystrixCommandGroupKey;
+import com.jfinal.log.Log;
+import io.jboot.Jboot;
+import io.jboot.component.hystrix.HystrixRunnable;
 import io.jboot.component.hystrix.annotation.EnableHystrixCommand;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -27,56 +28,28 @@ import org.aopalliance.intercept.MethodInvocation;
  */
 public class JbootHystrixCommandInterceptor implements MethodInterceptor {
 
-    EnableHystrixCommand enableHystrixCommand;
+    static Log log = Log.getLog(JbootHystrixCommandInterceptor.class);
 
-    public JbootHystrixCommandInterceptor(EnableHystrixCommand hystrixCommand) {
-        this.enableHystrixCommand = hystrixCommand;
-    }
-
-    public JbootHystrixCommandInterceptor() {
-
-    }
 
     @Override
     public Object invoke(MethodInvocation methodInvocation) throws Throwable {
-        if (enableHystrixCommand == null) {
-            enableHystrixCommand = methodInvocation.getThis().getClass().getAnnotation(EnableHystrixCommand.class);
-        }
 
-        JbootHystrixCommand command = new JbootHystrixCommand(new HystrixRunnable() {
+        EnableHystrixCommand enableHystrixCommand = methodInvocation.getThis().getClass().getAnnotation(EnableHystrixCommand.class);
+
+        return Jboot.hystrix(enableHystrixCommand.key(), new HystrixRunnable() {
             @Override
             public Object run() {
                 try {
                     return methodInvocation.proceed();
                 } catch (Throwable throwable) {
-                    throwable.printStackTrace();
+                    log.error(throwable.toString(), throwable);
                 }
                 return null;
             }
-        }, enableHystrixCommand.key());
+        });
 
 
-        return command.execute();
     }
 
 
-    public static class JbootHystrixCommand extends HystrixCommand<Object> {
-
-        private final HystrixRunnable runnable;
-
-        public JbootHystrixCommand(HystrixRunnable runnable, String key) {
-            super(HystrixCommandGroupKey.Factory.asKey(key));
-            this.runnable = runnable;
-        }
-
-        @Override
-        protected Object run() {
-            return runnable.run();
-        }
-    }
-
-
-    public static interface HystrixRunnable {
-        public abstract Object run();
-    }
 }

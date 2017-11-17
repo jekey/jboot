@@ -24,6 +24,8 @@ public class JbootHystrixConfig {
     private String propertie;
 
 
+
+
     public String getUrl() {
         return url;
     }
@@ -39,6 +41,7 @@ public class JbootHystrixConfig {
     public void setPropertie(String propertie) {
         this.propertie = propertie;
     }
+
 }
 
 

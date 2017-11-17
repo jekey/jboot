@@ -60,6 +60,16 @@ public class JbootRedisCacheImpl extends JbootCacheBase {
     }
 
     @Override
+    public void put(String cacheName, Object key, Object value, int liveSeconds) {
+        if (value == null) {
+            // if value is null : java.lang.NullPointerException: null at redis.clients.jedis.Protocol.sendCommand(Protocol.java:99)
+            return;
+        }
+
+        redis.setex(buildKey(cacheName, key), liveSeconds, value);
+    }
+
+    @Override
     public List getKeys(String cacheName) {
         List<String> keys = new ArrayList<String>();
         keys.addAll(redis.keys(cacheName + ":*"));
@@ -80,7 +90,9 @@ public class JbootRedisCacheImpl extends JbootCacheBase {
     public void removeAll(String cacheName) {
         String[] keys = new String[]{};
         keys = redis.keys(cacheName + ":*").toArray(keys);
-        redis.del(keys);
+        if (keys != null && keys.length > 0) {
+            redis.del(keys);
+        }
     }
 
 
@@ -107,5 +119,15 @@ public class JbootRedisCacheImpl extends JbootCacheBase {
             }
         }
         return String.format("%s:O:%s", cacheName, key);
+    }
+
+    @Override
+    public <T> T get(String cacheName, Object key, IDataLoader dataLoader, int liveSeconds) {
+        Object data = get(cacheName, key);
+        if (data == null) {
+            data = dataLoader.load();
+            put(cacheName, key, data, liveSeconds);
+        }
+        return (T) data;
     }
 }

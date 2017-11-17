@@ -15,11 +15,19 @@
  */
 package io.jboot.server.listener;
 
-import com.jfinal.config.*;
+import com.jfinal.config.Constants;
+import com.jfinal.config.Interceptors;
+import com.jfinal.config.Routes;
 import com.jfinal.template.Engine;
+import io.jboot.aop.jfinal.JfinalHandlers;
+import io.jboot.aop.jfinal.JfinalPlugins;
+import io.jboot.server.ContextListeners;
+import io.jboot.server.Servlets;
 
 
 public interface JbootAppListener {
+
+    public void onJbootDeploy(Servlets servlets, ContextListeners listeners);
 
     public void onJfinalConstantConfig(Constants constants);
 
@@ -27,11 +35,11 @@ public interface JbootAppListener {
 
     public void onJfinalEngineConfig(Engine engine);
 
-    public void onJfinalPluginConfig(Plugins plugins);
+    public void onJfinalPluginConfig(JfinalPlugins plugins);
 
     public void onInterceptorConfig(Interceptors interceptors);
 
-    public void onHandlerConfig(Handlers handlers);
+    public void onHandlerConfig(JfinalHandlers handlers);
 
     public void onJFinalStarted();
 

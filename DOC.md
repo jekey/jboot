@@ -1,7 +1,98 @@
 
-在阅读Jboot文档之前，我假定您已经了解了JFinal，已经有JFinal的基础知识，如果您还没有了解JFinal，请先去JFinal官网 www.jfinal.com 了解学习JFinal，Jboot是基于JFinal进行二次开发，依赖JFinal的基础知识。
+# 目录
+- [JBoot核心组件](#jboot核心组件)
+- [MVC](#mvc)
+	- MVC的概念
+	- JbootController
+	- @RquestMapping
+		- 使用@RquestMapping
+		- render
+	- session 与 分布式session
+- [安全控制](#安全控制)
+	- shiro简介
+	- shiro的配置
+	- shiro的使用
+		- 12个模板指令（用在html上）
+		- 5个Requires注解功能（用在Controller上）
+- [ORM](#orm)
+	- 配置
+		- 高级配置
+	- Model
+	- @Table注解
+	- Record
+	- DAO
+	- 多数据源
+	- 分库和分表
+		- 分库
+		- 分表
+- [AOP](#aop)
+	- Google Guice
+	- @Inject
+	- @Bean
+- [RPC远程调用](#rpc远程调用)
+	- 使用步骤
+	- 其他注意
+- [MQ消息队列](#mq消息队列)
+	- 使用步骤
+	- RedisMQ
+	- ActiveMQ
+	- RabbitMq
+	- 阿里云商业MQ
+- [Cache缓存](#cache缓存)
+	- 使用步骤
+	- 注意事项
+	- ehcache
+	- redis
+	- ehredis
+- [http客户端](#http客户端)
+	- Get请求
+	- Post 请求
+	- 文件上传
+	- 文件下载
+- [metrics数据监控](#metrics数据监控)
+	- 添加metrics数据
+	- metrics与Ganglia
+	- metrics与grafana
+	- metrics与jmx
+- [容错与隔离](#容错与隔离)
+	- hystrix配置
+	- Hystrix Dashboard 部署
+	- 通过 Hystrix Dashboard 查看数据
+	
+- [Opentracing数据追踪](#opentracing数据追踪)
+	- [Opentracing简介](#opentracing简介)
+	- [Opentracing在Jboot上的配置](#opentracing在jboot上的配置)
+	- [Zipkin](#zipkin)
+		- [Zipkin快速启动](#zipkin快速启动)
+		- [使用zipkin](#使用zipkin)
+	- SkyWalking
+		- [SkyWalking快速启动](#skywalking快速启动)
+		- [使用SkyWalking](#使用skywalking)
+	- 其他
+- [统一配置中心](#统一配置中心)
+	- [部署统一配置中心服务器](#部署统一配置中心服务器)
+	- [连接统一配置中心](#连接统一配置中心)
 
-或者您也可以去购买我的课程进行学习，课程地址：http://www.yangfuhai.com/post/6.html
+
+- [Swagger api自动生成](#swagger-api自动生成)
+	- [swagger简介](#swagger简介)
+	- [swagger使用](#swagger使用)
+	- [5个swagger注解](#swagger使用)
+
+	
+- 其他
+	- [SPI扩展](#spi扩展)
+	- [JbootEvnet事件机制](#jbootEvnet事件机制)
+	- 自定义序列化
+	- 配置文件
+	- 代码生成器
+- [项目构建](#项目构建)
+- 鸣谢
+- [联系作者](#联系作者)
+- [常见问题](#常见问题)
+	- 使用Jboot后还能自定义JfinalConfig等配置文件吗？
+
+
 
 # JBoot核心组件
 Jboot的主要核心组件有以下几个。
@@ -105,25 +196,30 @@ jboot.cache.redis.database = 1
 
 
 ## shiro的使用
-Jboot的shiro模块为您提供了以下12个模板指令，方便您使用shiro。
+Jboot的shiro模块为您提供了以下12个模板指令，同时支持shiro的5个Requires注解功能。方便您使用shiro。
+
+### 12个模板指令（用在html上）
 
 | 指令         |  描述  |
 | ------------- | -----|
-| ShiroAuthenticated |用户已经身份验证通过，Subject.login登录成功 |
-| ShiroGuest  |游客访问时。 但是，当用户登录成功了就不显示了|
-| ShiroHasAllPermission  |拥有全部权限 |
-| ShiroHasAllRoles  |拥有全部角色 |
-| ShiroHasAnyPermission  |拥有任何一个权限 |
-| ShiroHasAnyRoles  |拥有任何一个角色 |
-| ShiroHasPermission  |有相应权限 |
-| ShiroHasRole  |有相应角色 |
-| ShiroNoAuthenticated  |未进行身份验证时，即没有调用Subject.login进行登录。 |
-| ShiroNotHasPermission  |没有该权限 |
-| ShiroNotHasRole  |没没有该角色 |
-| ShiroPrincipal  |获取Subject Principal 身份信息 |
+| shiroAuthenticated |用户已经身份验证通过，Subject.login登录成功 |
+| shiroGuest  |游客访问时。 但是，当用户登录成功了就不显示了|
+| shiroHasAllPermission  |拥有全部权限 |
+| shiroHasAllRoles  |拥有全部角色 |
+| shiroHasAnyPermission  |拥有任何一个权限 |
+| shiroHasAnyRoles  |拥有任何一个角色 |
+| shiroHasPermission  |有相应权限 |
+| shiroHasRole  |有相应角色 |
+| shiroNoAuthenticated  |未进行身份验证时，即没有调用Subject.login进行登录。 |
+| shiroNotHasPermission  |没有该权限 |
+| shiroNotHasRole  |没没有该角色 |
+| shiroPrincipal  |获取Subject Principal 身份信息 |
 
 
-### ShiroAuthenticated的使用
+
+
+
+#### shiroAuthenticated的使用
 
 ```html
 #shiroAuthenticated()
@@ -134,93 +230,161 @@ Jboot的shiro模块为您提供了以下12个模板指令，方便您使用shiro
 
 
 
-### ShiroGuest的使用
+#### shiroGuest的使用
 
 ```html
-#ShiroGuest()
+#shiroGuest()
   游客您好
 #end
 
 ```
 
-### ShiroHasAllPermission的使用
+#### shiroHasAllPermission的使用
 
 ```html
-#ShiroHasAllPermission(permissionName1,permissionName2)
+#shiroHasAllPermission(permissionName1,permissionName2)
   您好，您拥有了权限 permissionName1和permissionName2
 #end
 
 ```
 
-### ShiroHasAllRoles的使用
+#### shiroHasAllRoles的使用
 
 ```html
-#ShiroHasAllRoles(role1, role2)
+#shiroHasAllRoles(role1, role2)
   您好，您拥有了角色 role1和role2
 #end
 
 ```
-### ShiroHasAnyPermission的使用
+#### shiroHasAnyPermission的使用
 
 ```html
-#ShiroHasAnyPermission(permissionName1,permissionName2)
+#shiroHasAnyPermission(permissionName1,permissionName2)
   您好，您拥有了权限 permissionName1 或 permissionName2 
 #end
 
 ```
-### ShiroHasAnyRoles的使用
+#### shiroHasAnyRoles的使用
 
 ```html
-#ShiroHasAllRoles(role1, role2)
+#shiroHasAllRoles(role1, role2)
   您好，您拥有了角色 role1 或 role2
 #end
 
 ```
-### ShiroHasPermission的使用
+#### shiroHasPermission的使用
 
 ```html
-#ShiroHasPermission(permissionName1)
+#shiroHasPermission(permissionName1)
   您好，您拥有了权限 permissionName1 
 #end
 
 ```
-### ShiroHasRole的使用
+#### shiroHasRole的使用
 
 ```html
-#ShiroHasRole(role1)
+#shiroHasRole(role1)
   您好，您拥有了角色 role1 
 #end
 
 ```
-### ShiroNoAuthenticated的使用
+#### shiroNoAuthenticated的使用
 
 ```html
-#ShiroNoAuthenticated()
+#shiroNoAuthenticated()
   您好，您还没有登陆
 #end
 
 ```
-### ShiroNotHasPermission的使用
+#### shiroNotHasPermission的使用
 
 ```html
-#ShiroNotHasPermission(permissionName1)
+#shiroNotHasPermission(permissionName1)
   您好，您没有权限 permissionName1 
 #end
 
 ```
-### ShiroNotHasRole的使用
+#### shiroNotHasRole的使用
 ```html
-#ShiroNotHasRole(role1)
+#shiroNotHasRole(role1)
   您好，您没有角色role1
 #end
 
 ```
-### ShiroPrincipal的使用
+#### shiroPrincipal的使用
 ```html
-#ShiroPrincipal()
+#shiroPrincipal()
   您好，您的登陆信息是：#(principal)
 #end
 
+```
+
+
+### 5个Requires注解功能（用在Controller上）
+
+| 指令         |  描述  |
+| ------------- | -----|
+| RequiresPermissions | 需要权限才能访问这个action |
+| RequiresRoles  | 需要角色才能访问这个action|
+| RequiresAuthentication  | 需要授权才能访问这个action，即：`SecurityUtils.getSubject().isAuthenticated()` |
+| RequiresUser  | 获取到用户信息才能访问这个action，即：`SecurityUtils.getSubject().getPrincipal() != null ` |
+| RequiresGuest  | 和RequiresUser相反 |
+
+
+#### RequiresPermissions的使用
+
+```java
+public class MyController extends JbootController{
+
+      @RequiresPermissions("permission1")
+      public void index(){
+
+	  }
+	  
+	  @RequiresPermissions(value={"permission1","permission2"},logical=Logincal.AND)
+      public void index1(){
+
+	  }
+}
+```
+
+#### RequiresRoles的使用
+
+```java
+public class MyController extends JbootController{
+
+      @RequiresRoles("role1")
+      public void index(){
+
+	  }
+	  
+	  @RequiresRoles(value = {"role1","role2"},logical=Logincal.AND)
+      public void userctener(){
+
+	  }
+}
+```
+
+#### RequiresUser、RequiresGuest、RequiresAuthentication的使用
+
+```java
+public class MyController extends JbootController{
+
+      @RequiresUser
+      public void userCenter(){
+
+	  }
+	  
+	  @RequiresGuest
+      public void login(){
+
+	  }
+	  
+	  @RequiresAuthentication
+	  public void my(){
+	  
+	  }
+}
 ```
 
 
@@ -361,7 +525,67 @@ company.save();
 
 
 ## 分库和分表
-待续
+
+### 分库
+分库建议使用多数据源的方式进行分库
+
+### 分表
+在Jboot中，分表是通过sharding-jdbc（ 网址：https://github.com/shardingjdbc/sharding-jdbc） 来实现的，所以，在了解Jboot的分表之前，请先阅读了解sharding-jdbc的配置信息。
+
+阅读Jboot的分表之前，假定你对Sharding-jdbc已经有所了解。
+
+#### 第一步：编写分表策略
+
+例如：
+
+```java
+public final class ModuloTableShardingAlgorithm implements SingleKeyTableShardingAlgorithm<Integer> {
+
+    @Override
+    public String doEqualSharding(final Collection<String> tableNames, final ShardingValue<Integer> shardingValue) {
+        
+    }
+
+    @Override
+    public Collection<String> doInSharding(final Collection<String> tableNames, final ShardingValue<Integer> shardingValue) {
+       
+    }
+
+    @Override
+    public Collection<String> doBetweenSharding(final Collection<String> tableNames, final ShardingValue<Integer> shardingValue) {
+        
+    }
+}
+```
+
+具体实现参考：
+
+https://github.com/shardingjdbc/sharding-jdbc/blob/master/sharding-jdbc-example/sharding-jdbc-example-jdbc/src/main/java/com/dangdang/ddframe/rdb/sharding/example/jdbc/algorithm/ModuloTableShardingAlgorithm.java 
+
+#### 第二步：编写 IShardingRuleFactory 的实现类
+
+```java
+public class MyShardingRuleFactory implements IShardingRuleFactory{
+	public ShardingRule createShardingRule(DataSource dataSource){
+	     // 创建分片规则
+	}
+}
+```
+
+具体可以参 
+
+https://github.com/shardingjdbc/sharding-jdbc/blob/master/sharding-jdbc-example/sharding-jdbc-example-jdbc/src/main/java/com/dangdang/ddframe/rdb/sharding/example/jdbc/Main.java
+
+
+#### 第三步：给数据源配置上ShardingRuleFactory
+
+```
+jboot.datasource.type=
+jboot.datasource.url=
+jboot.datasource.user=
+jboot.datasource.password=
+jboot.datasource.shardingRuleFactory=com.yours.MyShardingRuleFactory
+```
 
 
 # AOP
@@ -372,31 +596,559 @@ Jboot 的AOP功能，是使用了Google的Guice框架来完成的，通过AOP，
 ## @Bean
 
 # RPC远程调用
-## Motan
-## @RpcService
+在Jboot中，RPC远程调用是通过新浪的motan、或阿里的dubbo来完成的。计划会支持 grpc和thrift等。
+
+
+### 使用步骤：
+#### 第一步：配置Jboot.properties文件，内容如下：
+
+```java
+#默认类型为 motan (支持:dubbo,计划支持 grpc 和 thrift)
+jboot.rpc.type = motan
+#发现服务类型为 consul ，支持zookeeper。
+jboot.rpc.registryType = consul
+jboot.rpc.registryAddress = 127.0.0.1:8500
+```
+
+#### 第二步：定义接口
+
+```java
+public interface HelloService {
+    public String hello(String name);
+}
+```
+
+#### 第三步：通过@JbootrpcService注解暴露服务到注册中心
+
+```java
+@JbootrpcService
+public class myHelloServiceImpl  implements HelloService {
+    public String hello(String name){
+         System.out.println("hello" + name);
+         return "hello ok";
+    }
+}
+```
+
+#### 第四步：客户调用
+
+```java
+ HelloService service = Jboot.me().service(HelloService.class);
+ service.hello("michael");
+```
+如果是在Controller中，也可以通过 @JbootrpcService 注解来获取服务，代码如下：
+
+```java
+public class MyController extends JbootController{
+    
+    @JbootrpcService
+    HelloService service ;
+    
+    public void index(){
+        String text = service.hello();
+        renderText(text);
+    }
+    
+}
+```
+
+#### 其他注意
+因为在配置文件中，配置的服务发现类型为consul，所以需要提前安装好consul。
+
+##### 下载consul
+https://www.consul.io 
+
+##### 启动consul
+
+```java
+consul -agent dev
+```
+
+
 
 # MQ消息队列
+Jboot 内置整个了MQ消息队列，使用MQ非常简单
+
+#### 第一步：配置jboot.properties文件，内容如下：
+```java
+#默认为redis (支持: redis,activemq,rabbitmq,hornetq,aliyunmq等 )
+jboot.mq.type = redis
+jboot.mq.redis.host = 127.0.0.1
+jboot.mq.redis.password =
+jboot.mq.redis.database =
+```
+
+#### 第二步：在服务器A中添加一个MQ消息监听器
+
+```java
+Jboot.me().getMq().addMessageListener(new JbootmqMessageListener(){
+        @Override
+        public void onMessage(String channel, Object obj) {
+           System.out.println(obj);
+        }
+}, channel);
+```
+
+#### 第三步：服务器B发送一个消息
+
+```java
+ Jboot.me().getMq().publish(yourObject, toChannel);
+```
+
+#### 注意：服务器A和服务器B在jboot.properties上应配置相同的内容。
+
 ## RedisMQ
 ## ActiveMQ
 
 # Cache缓存
+Jboot中内置支持了ehcache、redis和 一个基于ehcache、redis研发的二级缓存ehredis，在使用Jboot缓存之前，先配置完成缓存的配置。
+
+### 使用步骤
+#### 第一步：配置jboot.properties文件，内容如下：
+
+```java
+#默认类型为ehcache ehcache (支持:ehcache,redis,ehredis)
+jboot.cache.type = redis
+jboot.cache.redis.host = 127.0.0.1
+jboot.cache.redis.password =
+jboot.cache.redis.database =
+```
+备注：ehredis 是一个基于ehcache和redis实现的二级缓存框架。
+
+#### 第二步：使用缓存
+
+```java
+Jboot.me().getCache().put("cacheName", "key", "value");
+```
+
+### 注意事项
+Jboot的分布式session是通过缓存实现的，所以如果要启用Jboot的分布式session，请在缓存中配置类型为redis或者ehredis。
+
+
 ## ehcache
 ## redis
 ## ehredis
 
 # http客户端
+Jboot内置了一个轻量级的http客户端，可以通过这个客户端方便的对其他第三方http服务器进行数据请求和下载等功能。
 
-# 监控
+### Get请求
+
+```java
+@Test
+public void testHttpGet(){
+    String html = Jboot.httpGet("https://www.baidu.com");
+    System.out.println(html);
+}
+```
+
+或者
+
+```java
+@Test
+public void testHttpPost(){
+    Map<String, Object> params  = new HashMap<>();
+    params.put("key1","value1");
+    params.put("key2","value2");
+
+
+    String html = Jboot.httpGet("http://www.oschina.net/",params);
+    System.out.println(html);
+}
+```
+
+### Post请求
+
+```java
+@Test
+public void testHttpPost(){
+    String html = Jboot.httpPost("http://www.xxx.com");
+    System.out.println(html);
+}
+```
+
+或者
+
+```java
+@Test
+public void testHttpPost(){
+    Map<String, Object> params  = new HashMap<>();
+    params.put("key1","value1");
+    params.put("key2","value2");
+
+
+    String html = Jboot.httpPost("http://www.oschina.net/",params);
+    System.out.println(html);
+}
+```
+
+### 文件上传
+
+```java
+@Test
+public void testHttpUploadFile(){
+    Map<String, Object> params  = new HashMap<>();
+    params.put("file1",file1);
+    params.put("file2",file2);
+
+
+    String html = Jboot.httpPost("http://www.oschina.net/",params);
+    System.out.println(html);
+}
+```
+备注：文件上传其实和post提交是一样的，只是params中的参数是文件。
+
+### 文件下载
+
+```java
+@Test
+public void testHttpDownload() {
+
+    String url = "http://www.xxx.com/abc.zip";
+    File downloadToFile = new File("/xxx/abc.zip");
+
+    JbootHttpRequest request = JbootHttpRequest.create(url, null, JbootHttpRequest.METHOD_GET);
+    request.setDownloadFile(downloadToFile);
+
+    JbootHttpResponse response = Jboot.me().getHttp().handle(request);
+
+    if (response.isError()){
+        downloadToFile.delete();
+    }
+
+    System.out.println(downloadToFile.length());
+}
+```
+
+
+
+# metrics数据监控
+Jboot的监控机制是通过Metrics来来做监控的，要启用metrics非常简单，通过在jboot.properties文件配置上`jboot.metrics.url`就可以启用metrics。
+
+例如
+
+```xml
+jboot.metrics.url = /metrics.html
+```
+我们就可以通过访问 `http://host:port/metrics.html` 来访问到metrics数据情况。
+
+### 添加metrics数据
+默认通过Url访问到的数据是没有具体内容，因为metrics无法得知要显示什么样的数据内容。例如，我们要统计某个action的用户访问量，可以通过在action里编写如下代码。
+
+```java
+public void myaction() {
+
+    Jboot.me().getMetric().counter("myaction").inc();
+
+    renderText("my action");
+}
+```
+
+当我们访问myaction这个地址后，然后再通过浏览器`http://host:port/metrics.html`访问，我们就能查看到如下的json数据。
+
+```js
+{
+	"version": "3.1.3",
+	"gauges": {},
+	"counters": {
+		"myaction": {
+				"count": 1
+			}
+	},
+	"histograms": {},
+	"meters": {},
+	"timers": {}
+}
+```
+当再次访问`myaction`后，count里面的值就变成2了。
+
+### metrics与Ganglia
+
+
+### metrics与Grafana
+
+### metrics与jmx
+metrics与jmx集成非常简单，只需要在jboot.properties文件添加如下配置：
+
+```xml
+jboot.metrics.jmxReporter = true
+```
+然后，我们就可以通过`JConsole`或者`VisualVM`进行查看了。
+
 
 # 容错与隔离
+
+### hystrix配置
+Jboot的容错、隔离和降级服务、都是通过`Hystrix`来实现的。在RPC远程调用中，Jboot已经默认开启了Hystrix的监控机制，对数默认错误率达到50%的service则立即返回，不走网络。
+
+
+### Hystrix Dashboard 部署
+要查看hystrix的数据，我们需要部署`Hystrix Dashboard`。然后通过`Hystrix Dashboard`来查看。
+
+通过Gradle来编译：
+
+```
+$ git clone https://github.com/Netflix/Hystrix.git
+$ cd Hystrix/hystrix-dashboard
+$ ../gradlew appRun
+> Building > :hystrix-dashboard:appRun > Running at http://localhost:7979/hystrix-dashboard
+```
+
+或者通过docker来运行hystrix-dashboard:
+
+```java
+docker run --rm -ti -p 7979:7979 kennedyoliveira/hystrix-dashboard
+```
+
+运行`hystrix-dashboard`成功后，通过浏览器输入`http://localhost:7979/hystrix-dashboard`就可以看到如下图显示：
+
+
+ ![](https://github.com/Netflix/Hystrix/wiki/images/dashboard-home.png)
+
+
+### 通过 Hystrix Dashboard 查看数据
+接下来，我们需要配置jboot应用的hystrix监控地址，配置如下：
+
+```
+jboot.hystrix.url = /hystrix.stream
+```
+然后在上面图片中，填写url地址为：`http://host:port/hystrix.stream`,并点击`monitor stream`按钮,就可以看到如下图显示，所以的远程调用方法都统计到了。
+ 
+ 
+ **注意：** 如果是通过docker启动的`hystrix-dashboard`，`http://host:port/hystrix.stream`中的host一定是本机的真实IP地址。
+
+ 
+ ![](https://github.com/Netflix/Hystrix/wiki/images/hystrix-dashboard-netflix-api-example-iPad.png)
+
+### 自定义监控隔离
+
+# Opentracing数据追踪
+Jboot在分布式下，对数据的追踪是通过opentracing来实现的，opentracing官方地址（http://opentracing.io ）
+
+### Opentracing简介
+OpenTracing（http://opentracing.io ）通过提供平台无关、厂商无关的API，使得开发人员能够方便的添加（或更换）追踪系统的实现。OpenTracing正在为全球的分布式追踪，提供统一的概念和数据标准。
+
+目前，已经有了诸如 UBER，LightStep，Apple，yelp，workiva等公司在跟进，以及开源团队：ZIPKIN，appdash，TRACER，JAEGER，GRPC等的支持。
+
+已经支持 opentracing-api的开源库有：Zipkin，Jaeger（Uber公司的），Appdash，LightStep，Hawkular，Instana，sky-walking，inspectIT，stagemonitor等。具体地址请查看：http://opentracing.io/documentation/pages/supported-tracers.html
+
+### Opentracing在Jboot上的配置
+在jboot中启用opentracing非常简单，只需要做如下配置：
+
+```java
+jboot.tracing.type=zipkin
+jboot.tracing.serviceName=service1
+jboot.tracing.url=http://127.0.0.1:9411/api/v2/spans
+```
+同步简单几个配置，就可以启动opentracing对数据的追踪，并把数据传输到对应的服务器上，例如使用的是zipkin，那么就会传输到zipkin的server上。
+
+### Zipkin
+zipkin官网： http://zipkin.io/ 
+
+#### zipkin快速启动
+
+```java
+wget -O zipkin.jar 'https://search.maven.org/remote_content?g=io.zipkin.java&a=zipkin-server&v=LATEST&c=exec'
+java -jar zipkin.jar
+```
+
+或者通过docker来运行：
+
+```java
+docker run -d -p 9411:9411 openzipkin/zipkin
+```
+
+或者 自己编译zipkin源代码，然后通过以下方式执行：
+
+```java
+# Build the server and also make its dependencies
+$ ./mvnw -DskipTests --also-make -pl zipkin-server clean install
+# Run the server
+$ java -jar ./zipkin-server/target/zipkin-server-*exec.jar
+```
+
+#### 使用zipkin
+通过以上步骤，把zipkin启动后，只需要在 jboot.properties 文件把 jboot.tracing.url 的属性修改为zipkin的地址即可：
+
+```
+jboot.tracing.url = http://127.0.0.1:9411/api/v2/spans
+```
+
+配置之后，我们就可以通过zipkin来查看jboot追踪的数据了。
+![](http://zipkin.io/public/img/web-screenshot.png)
+
+### SkyWalking
+SkyWalking官网：http://skywalking.org ，Skywalking为国人开发，据说目前 **华为开发云**、**当当网** 等已经 加入 Skywalking 生态系统，具体查看：https://www.oschina.net/news/89756/devcloud-dangdang-join-skywalking 
+
+#### SkyWalking快速启动
+#### 使用SkyWalking
+
+### 其他
+
+
+# 统一配置中心
+在jboot中，已经内置了统一配置中心，当中心配置文件修改后，分布式服务下的所有有用的额配置都会被修改。在某些情况下，如果统一配置中心出现宕机等情况，微服务将会使用本地配置文件当做当前配置信息。
+
+## 部署统一配置中心服务器
+部署统一配置服务器非常简单，不需要写一行代码，把jboot.proerties的配置信息修改如下，并启动jboot，此时的jboot就已经是一个统一配置中心了。
+
+```
+jboot.config.serverEnable=true
+jboot.config.path=/Users/michael/Desktop/test
+```
+在以上配置中，我们可以把所有的配置文件(.properties文件)放到目录 `/Users/michael/Desktop/test` 目录下，当该目录下新增配置文件、修改配置文件、删除配置文件都会通过http暴露出去。
+
+当启动 jboot 后，我们可以通过浏览器输入 `http://127.0.0.1:8080/jboot/config`来查看配置情况，微服务客户端也是定时访问这个url地址来读取配置信息。
+
+
+## 连接统一配置中心
+
+要启用远程配置也非常简单，只需要在微服务添加下配置即可。
+
+```
+jboot.config.remoteEnable=true
+jboot.config.remoteUrl=http://127.0.0.1:8080/jboot/config
+```
+当启用远程配置后，服务会优先使用远程配置，在远程配置未配置 或 宕机的情况下使用本地配置。
+
+# Swagger api自动生成
+
+## swagger简介
+
+## swagger使用
+
+
+### 第一步：配置并启用swagger
+在 jboot.properties上添加如下配置：
+
+```java
+jboot.swagger.path=/swaggerui
+jboot.swagger.title=Jboot API 测试
+jboot.swagger.description=这真的真的真的只是一个测试而已，不要当真。
+jboot.swagger.version=1.0
+jboot.swagger.termsOfService=http://jboot.io
+jboot.swagger.contact=email:fuhai999@gmail.com;qq:123456
+jboot.swagger.host=127.0.0.1:8080 
+```
+
+### 第二步：下载swagger ui放到resource目录下
+注意，这里一定要放在resource的 `swaggerui` 目录，因为以上的配置中是`jboot.swagger.path=/swaggerui`,当然可以通过这个配置来修改这个存放目录。
+
+另：swagger ui 的下载地址是：https://github.com/swagger-api/swagger-ui，下载其 `dist` 目录即可，只需要这个目录里的文件。
+
+### 第三步：通过注解配置Controller的api
+
+代码如下：
+
+```java
+@SwaggerAPIs(name = "测试接口", description = "这个接口集合的描述")
+@RequestMapping("/swaggerTest")
+public class MySwaggerTestController extends JbootController {
+
+
+    @SwaggerAPI(description = "测试description描述", summary = "测试summary", operationId = "testOnly",
+            params = {@SwaggerParam(name = "name", description = "请输入账号名称")}
+    )
+    public void index() {
+        renderJson(Ret.ok("k1", "v1").set("name", getPara("name")));
+    }
+
+
+    @SwaggerAPI(description = "进行用户登录操作", summary = "用户登录API", method = "post",
+            params = {
+                    @SwaggerParam(name = "name", description = "请输入账号名称"),
+                    @SwaggerParam(name = "pwd", description = "请输入密码", definition = "MySwaggerPeople")
+            }
+    )
+    public void login() {
+        renderJson(Ret.ok("k2", "vv").set("name", getPara("name")));
+    }
+}
+```
+
+### 第四步：浏览器访问swagger生成api文档
+在第一步的配置中，因为`jboot.swagger.path=/swaggerui`，所以我们访问如下地址：`http://127.0.0.1:8080/swaggerui` 效果如下图所示。
+
+![](http://oss.yangfuhai.com/markdown/jboot/swagger/01.png)
+图片1
+
+![](http://oss.yangfuhai.com/markdown/jboot/swagger/02.png)
+图片2
+
+在图片2中，我们可以输入参数，并点击 `Execute` 按钮进行测试。
+
+## 5个swagger注解
+
+
+| 指令         |  描述  |
+| ------------- | -----|
+| SwaggerAPIs  | 在Controller上进行配置，指定Controller api的描述|
+| SwaggerAPI | 在Controller上某个action进行注解 |
+| SwaggerDefinition  |  |
+| SwaggerDefinitionEnum  |  |
+| SwaggerParam  |  |
+| SwaggerResponse  |  | 
 
 # 其他
 
 ## SPI扩展
+SPI的全名为Service Provider Interface。
+
+### SPI具体约定
+当服务的提供者，提供了服务接口的一种实现之后，在jar包的META-INF/services/目录里同时创建一个以服务接口命名的文件。该文件里就是实现该服务接口的具体实现类。而jboot装配这个模块的时候，就能通过该jar包META-INF/services/里的配置文件找到具体的实现类名，并装载实例化，完成模块的注入。
+
+### Jboot SPI模块
+在jboot中，一下模块已经实现了SPI机制。
+
+- Jbootrpc
+- JbootHttp
+- JbootCache
+- Jbootmq
+- JbootSerializer
+
+例如，在JbootCache中，内置了三种实现方案：ehcache、redis、ehredis。在配置文件中，我看可以通过 `jboot.cache.type = ehcache` 的方式来指定在Jboot应用中使用了什么样的缓存方案。
+
+但是，在Jboot中，通过SPI机制，我们一样可以扩展出第4、第5甚至更多的缓存方案出来。
+
+扩展步骤如下：
+
+- 第一步：编写JbootCache的子类
+- 第二步：通过@JbootSpi注解给刚刚编写的类设置上一个名字，例如：mycache
+- 第三步：通过在jboot.properties文件中配置上类型为 mycache，配置代码如下：
+
+```xml
+jboot.cache.type = mycache
+```
+
+通过以上三步，我们就可以完成了对JbootCache模块的扩展，其他模块类似。
 
 ## JbootEvnet事件机制
+为了解耦，Jboot内置了一个简单易用的事件系统，使用事件系统非常简单。
+
+#### 第一步，注册事件的监听器。
+
+```java
+@EventConfig(action = {“event1”,"event2"})
+public class MyEventListener implements JbootEventListener {
+    
+    public  void onMessage(JbootEvent event){
+        Object data = event.getData();
+        System.out.println("get event:"data);
+    }
+}
+```
+通过 @EventConfig 配置 让MyEventListener监听上 event1和event2两个事件。
+
+#### 第二步，在项目任何地方发生事件
+
+```java
+Jboot.sendEvent("event1",  object)
+```
+
+
 
 ## 自定义序列化
+自定义序列化是通过Jboot的SPI机制来实现的，请参考 [SPI扩展](#SPI扩展)。
 
 ## 配置文件
 
@@ -461,344 +1213,222 @@ MyConfigModel config = Jboot.config(MyConfigModel.class);
 
 ## 分布式session
 
-## shiro安全控制
 
 ## 代码生成器
+Jboot内置了一个简易的代码生成器，可以用来生成model层和Service层的基础代码，在生成代码之前，请先配置jboot.properties关于数据库相关的配置信息。
 
+### 使用步骤
 
-
-# maven dependency
-
+#### 第一步：配置数据源
 ```xml
-<dependency>
-    <groupId>io.jboot</groupId>
-    <artifactId>jboot</artifactId>
-    <version>1.0-beta3</version>
-</dependency>
-
-```
-# controller example
-
-
-
-new a controller
-
-```java
-@RequestMapping("/")
-public class MyController extend JbootController{
-   public void index(){
-        renderText("hello jboot");
-   }
-}
+jboot.datasource.type=mysql
+jboot.datasource.url=jdbc:mysql://127.0.0.1:3306/jbootdemo
+jboot.datasource.user=root
+jboot.datasource.password=your_password
 ```
 
-start 
-
-```java
-public class MyStarter{
-   public static void main(String [] args){
-       Jboot.run(args);
-   }
-}
-```
-
-visit: http://127.0.0.1:8080
-
-
-# mq example
-config jboot.properties
-
-```java
-#type default redis (support: redis,activemq,rabbitmq,hornetq,aliyunmq )
-jboot.mq.type = redis
-jboot.mq.redis.host = 127.0.0.1
-jboot.mq.redis.password =
-jboot.mq.redis.database =
-```
-
-server a sendMqMessage
-
-```java
- Jboot.me().getMq().publish(yourObject, toChannel);
-```
-
-server b message listener
-
-```java
-Jboot.me().getMq().addMessageListener(new JbootmqMessageListener(){
-        @Override
-        public void onMessage(String channel, Object obj) {
-           System.out.println(obj);
-        }
-}, channel);
-```
-
-# rpc example
-config jboot.properties
-
-```java
-#type default motan (support:local,motan,grpc,thrift)
-jboot.rpc.type = motan
-jboot.rpc.requestTimeOut
-jboot.rpc.defaultPort
-jboot.rpc.defaultGroup
-jboot.rpc.defaultVersion
-jboot.rpc.registryType = consul
-jboot.rpc.registryName
-jboot.rpc.registryAddress = 127.0.0.1:8500
-```
-
-define interface
-
-```java
-public interface HelloService {
-    public String hello(String name);
-}
-```
-
-server a export serviceImpl
-
-```java
-@JbootrpcService
-public class myHelloServiceImpl  implements HelloService {
-    public String hello(String name){
-         System.out.println("hello" + name);
-         return "hello ok";
-    }
-}
-```
-
-download consul and start (consul:https://www.consul.io/)
-
-```java
-consul -agent dev
-```
-
-server b call
-
-```java
- HelloService service = Jboot.me().service(HelloService.class);
- service.hello("michael");
-```
-
-or server b controller
-
-```java
-public class MyController extends bootController{
-    
-    @JbootrpcService
-    HelloService service ;
-    
-    public void index(){
-        
-        renderText("hello " + service.hello());
-    }
-    
-}
-```
-
-# cache example
-config jboot.properties
-
-```java
-#type default ehcache (support:ehcache,redis,ehredis)
-jboot.cache.type = redis
-jboot.cache.redis.host =
-jboot.cache.redis.password =
-jboot.cache.redis.database =
-```
-备注：ehredis 是一个基于ehcache和redis实现的二级缓存框架。
-
-use cache
-
-```java
-Jboot.me().getCache().put("cacheName", "key", "value");
-```
-
-# database access example
-config jboot.properties
-
-```java
-#type default mysql (support:mysql,oracle,db2...)
-jboot.datasource.type=
-jboot.datasource.url=
-jboot.datasource.user=
-jboot.datasource.password=
-jboot.datasource.driverClassName=
-jboot.datasource.connectionInitSql=
-jboot.datasource.cachePrepStmts=
-jboot.datasource.prepStmtCacheSize=
-jboot.datasource.prepStmtCacheSqlLimit=
-```
-
-define model
-
-```java
-@Table(tableName = "user", primaryKey = "id")
-public class User extends JbootModel<User> {
-	
-}
-```
-
-dao query
-
-```java
-public class UserDao extends JbootDaoBase {
-    public static find User DAO = new User();
-    
-    public User findById(String id){
-        return DAO.findById(id);
-    }
-    
-    public List<User> findByNameAndAge(String name,int age){
-        
-       Columns columns = Columns.create()
-                        .like("name","%"+name+"%")
-                        .gt("age",age);
-        
-        return DAO.findListByColums(columns);
-    }
-}
-```
-
-# event example
-
-send event
-
-```java
-Jboot.me().sendEvent(actionStr,  dataObj)
-```
-
-event listener
-
-```java
-@EventConfig(action = {User.ACTION_ADD,User.ACTION_DELETE})
-public class MyEventListener implements JbootEventListener {
-    
-    public  void onMessage(JbootEvent event){
-        
-        if(event.getAction.equals(User.ACTION_ADD)){
-            System.out.println("new user add, user:"+event.getData);
-        }else if(event.getAction.equals(User.ACTION_DELETE)){
-            System.out.println("user deleted, user:"+event.getData);
-        }
-        
-    }
-    
-}
-```
-
-# read config
-config jboot.properties
-
-```java
-jboot.myconfig.user = aaa
-jboot.myconfig.password = bbb
-```
-define config model
-
-```java
-@PropertieConfig(prefix = "jboot.myconfig")
-public class MyConfig {
-
-    private String name;
-    private String password;
-    
-    // getter and setter
-}
-```
-
-get config model
-
-```java
-    MyConfig config = Jboot.me().config(MyConfig.class);
-    System.out.println(config.getName());
-```
-
-# code generator
+#### 第二步：通过JbootModelGenerator生成model代码
 ```java
   public static void main(String[] args) {
   
+  		//model 的包名
         String modelPackage = "io.jboot.test";
+        
         JbootModelGenerator.run(modelPackage);
 
     }
 ```
 
-# build
+#### 第三步：通过JbootServiceGenerator生成Service代码
+```java
+  public static void main(String[] args) {
+  
+  		//生成service 的包名
+        String basePackage = "io.jboot.testservice";
+        //依赖model的包名
+        String modelPackage = "io.jboot.test";
+        
+        JbootServiceGenerator.run(basePackage, modelPackage);
+
+    }
+```
+
+#### 其他
+当没在jboot.properties文件配置数据源的时候，可以通过如下代码来使用：
+
+```java
+ public static void main(String[] args) {
+
+        Jboot.setBootArg("jboot.datasource.url", "jdbc:mysql://127.0.0.1:3306/jbootdemo");
+        Jboot.setBootArg("jboot.datasource.user", "root");
+
+        String basePackage = "io.jboot.codegen.service.test";
+        String modelPackage = "io.jboot.codegen.test.model";
+        JbootServiceGenerator.run(basePackage, modelPackage);
+
+    }
+
+```
+
+
+
+
+
+# 项目构建
+在Jboot中已经内置了高性能服务器undertow，undertow的性能比tomcat高出很多（具体自行搜索：undertow vs tomcat），所以jboot构建和部署等不再需要tomcat。在Jboot构建的时候，在linux平台下，会生成jboot.sh 在windows平台下会生成jboot.bat脚本，直接执行该脚本即可。
+
+生成jboot.sh或者jboot.bat，依赖maven的appassembler插件，因此，你的maven配置文件pom.xml需要添加如下配置：
 
 config pom.xml
 
 ```xml
- <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>appassembler-maven-plugin</artifactId>
-                <version>1.10</version>
-                <configuration>
-                    <assembleDirectory>${project.build.directory}/app</assembleDirectory>
-                    <repositoryName>lib</repositoryName>
-                    <binFolder>bin</binFolder>
-                    <configurationDirectory>webRoot</configurationDirectory>
-                    <copyConfigurationDirectory>true</copyConfigurationDirectory>
-                    <configurationSourceDirectory>src/main/resources</configurationSourceDirectory>
-                    <repositoryLayout>flat</repositoryLayout>
-                    <encoding>UTF-8</encoding>
-                    <logsDirectory>logs</logsDirectory>
-                    <tempDirectory>tmp</tempDirectory>
-                    <programs>
-                        <program>
-                            <mainClass>io.jboot.Jboot</mainClass>
-                            <id>jboot</id>
-                            <platforms>
-                                <platform>windows</platform>
-                                <platform>unix</platform>
-                            </platforms>
-                        </program>
-                    </programs>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+                <source>1.8</source>
+                <target>1.8</target>
+                <encoding>UTF-8</encoding>
+                <!--必须添加compilerArgument配置，才能使用JFinal的Controller方法带参数的功能-->
+                <compilerArgument>-parameters</compilerArgument>
+            </configuration>
+        </plugin>
+
+
+        <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>appassembler-maven-plugin</artifactId>
+            <version>1.10</version>
+            <configuration>
+            
+               <assembleDirectory>${project.build.directory}/app</assembleDirectory>
+                <repositoryName>libs</repositoryName>
+                <binFolder>bin</binFolder>
+                <configurationDirectory>webRoot</configurationDirectory>
+                <copyConfigurationDirectory>true</copyConfigurationDirectory>
+                <configurationSourceDirectory>src/main/resources</configurationSourceDirectory>
+                <repositoryLayout>flat</repositoryLayout>
+                <encoding>UTF-8</encoding>
+                <logsDirectory>logs</logsDirectory>
+                <tempDirectory>tmp</tempDirectory>
+
+                <programs>
+                    <!--程序打包 mvn package appassembler:assemble -->
+                    <program>
+                        <mainClass>io.jboot.Jboot</mainClass>
+                        <id>jboot</id>
+                        <platforms>
+                            <platform>windows</platform>
+                            <platform>unix</platform>
+                        </platforms>
+                    </program>
+                </programs>
+
+                <daemons>
+                    <!-- 后台程序打包：mvn clean package appassembler:generate-daemons -->
+                    <daemon>
+                        <mainClass>io.jboot.Jboot</mainClass>
+                        <id>jboot</id>
+                        <platforms>
+                            <platform>jsw</platform>
+                        </platforms>
+                        <generatorConfigurations>
+                            <generatorConfiguration>
+                                <generator>jsw</generator>
+                                <includes>
+                                    <include>linux-x86-32</include>
+                                    <include>linux-x86-64</include>
+                                    <include>macosx-universal-32</include>
+                                    <include>macosx-universal-64</include>
+                                    <include>windows-x86-32</include>
+                                    <include>windows-x86-64</include>
+                                </includes>
+                                <configuration>
+                                    <property>
+                                        <name>configuration.directory.in.classpath.first</name>
+                                        <value>webRoot</value>
+                                    </property>
+                                    <property>
+                                        <name>wrapper.ping.timeout</name>
+                                        <value>120</value>
+                                    </property>
+                                    <property>
+                                        <name>set.default.REPO_DIR</name>
+                                        <value>lib</value>
+                                    </property>
+                                    <property>
+                                        <name>wrapper.logfile</name>
+                                        <value>logs/wrapper.log</value>
+                                    </property>
+                                </configuration>
+                            </generatorConfiguration>
+                        </generatorConfigurations>
+                    </daemon>
+                </daemons>
+            </configuration>
+        </plugin>
+    </plugins>
+</build>
 ```
 
-maven build
+#### 进行maven构建
 
 ```java
 mvn package appassembler:assemble
 ```
+构建完毕后，会在target目录下生成一个app文件夹，在app文件的bin目录下会有一个jboot脚本（或者jboot.bat）。
 
-# start app
+#### 启动应用
 ```java
 cd yourProjectPath/target/app/bin
 ./jboot
 ```
 
-start app and change config
+##### 在启动的时候添加上自己的配置信息
 
 ```java
 cd yourProjectPath/target/app/bin
 ./jboot --jboot.server.port=8080 --jboot.rpc.type=local
 ```
-use your properties replace jboot.properties
+##### 使用你自己的配置文件来代替 jboot.properties
 
 ```java
 cd yourProjectPath/target/app/bin
 ./jboot --jboot.model=dev --jboot.server.port=8080
 ```
-use jboot-dev.proerties replace jboot.properties and set jboot.server.port=8080
+上面的命令启动后，会使用 `jboot-dev.proerties` 文件来替代 `jboot.properties` 同时设置 jboot.server.port=8080（服务器端口号为8080）
 
 
-# thanks
+#### 后台程序
+
+在以上文档中，如果通过如下代码进行构建的。
+
+```java
+mvn package appassembler:assemble
+```
+构建会生成 app目录，及对应的jboot脚本，但是jboot在执行的时候是前台执行的，也就是必须打开一个窗口，当关闭这个窗口后，jboot内置的服务器undertow也会随之关闭了，在正式的环境里，我们是希望它能够以服务的方式在后台运行。
+
+那么，如果构建一个后台运行的程序呢？步骤如下：
+
+##### 第一步：执行如下maven编译
+
+```java
+mvn clean package appassembler:generate-daemons
+```
+maven命令执行完毕后，会在target下生成如下文件夹 `/generated-resources/appassembler/jsw/jboot` , 文件中我们会找到bin目录，生成的后台脚本jboot（或jboot.bat）会存放在bin目录里。
+
+##### 第二步：启动应用
+```java
+cd yourProjectPath/target/generated-resources/appassembler/jsw/jboot/bin
+./jboot
+```
+此时，启动的应用为后台程序了。
+
+
+# 鸣谢
 rpc framework: 
 
 * motan(https://github.com/weibocom/motan)
@@ -831,4 +1461,26 @@ core framework:
 * qq:1506615067
 * wechat：wx198819880
 * email:fuhai999#gmail.com
+
+# 常见问题
+
+- 使用Jboot后还能自定义Jfinal的配置文件吗？
+	- 答：可以使用，目前提供两种方案。
+		- 方案1（推荐）：编写一个类，随便起个名字，继承 JbootAppListenerBase ,然后复写里面的方法。
+		- 方案2（不推荐）：编写自己的JfinalConfig，继承 JbootAppConfig ，然后在 jboot.properties 的 jboot.jfinalConfig 配置上自己的类名。注意，在自己的config中，请优先调用super方法。例如在configConstant中，请先调用super.configConstant(constants)。
+
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
 

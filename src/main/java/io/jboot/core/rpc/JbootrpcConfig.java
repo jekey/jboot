@@ -19,6 +19,9 @@ import io.jboot.Jboot;
 import io.jboot.JbootConfig;
 import io.jboot.config.annotation.PropertieConfig;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 
 @PropertieConfig(prefix = "jboot.rpc")
 public class JbootrpcConfig {
@@ -52,6 +55,13 @@ public class JbootrpcConfig {
     private String registryUserName;
     private String registryPassword;
 
+    /**
+     * 启动检查
+     */
+    private boolean registryCheck = false;
+    private boolean consumerCheck = false;
+    private boolean providerCheck = false;
+
 
     /**
      * 直连模式的时候，配置的url
@@ -62,11 +72,31 @@ public class JbootrpcConfig {
     /**
      * 对外暴露服务的相关配置
      */
+    private String host;
     private int defaultPort = 8088;
     private String defaultGroup = "jboot";
     private String defaultVersion = "1.0";
     private String serializer = Jboot.config(JbootConfig.class).getSerializer();
 
+    private String proxy = "jboot";
+    private String filter;  //多个过滤器请用英文逗号（,）隔开，默认添加opentracing过滤器，用于对rpc分布式调用的追踪
+
+
+    /**
+     * RPC Hystrix 相关的配置
+     */
+    // keys 的值为  key1:method1,method2;key2:method3,method4
+    private String hystrixKeys;
+    private boolean hystrixAutoConfig = true;
+    private String hystrixFallbackFactory;
+
+    public String getHost() {
+        return host;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
+    }
 
     public String getType() {
         return type;
@@ -178,5 +208,93 @@ public class JbootrpcConfig {
 
     public boolean isRegistryCallMode() {
         return CALL_MODE_REGISTRY.equals(getCallMode());
+    }
+
+    public String getProxy() {
+        return proxy;
+    }
+
+    public void setProxy(String proxy) {
+        this.proxy = proxy;
+    }
+
+    public String getFilter() {
+        return filter;
+    }
+
+    public void setFilter(String filter) {
+        this.filter = filter;
+    }
+
+    public String getHystrixKeys() {
+        return hystrixKeys;
+    }
+
+    public void setHystrixKeys(String hystrixKeys) {
+        this.hystrixKeys = hystrixKeys;
+    }
+
+    public boolean isHystrixAutoConfig() {
+        return hystrixAutoConfig;
+    }
+
+    public void setHystrixAutoConfig(boolean hystrixAutoConfig) {
+        this.hystrixAutoConfig = hystrixAutoConfig;
+    }
+
+    public String getHystrixFallbackFactory() {
+        return hystrixFallbackFactory;
+    }
+
+    public void setHystrixFallbackFactory(String hystrixFallbackFactory) {
+        this.hystrixFallbackFactory = hystrixFallbackFactory;
+    }
+
+    public boolean isRegistryCheck() {
+        return registryCheck;
+    }
+
+    public void setRegistryCheck(boolean registryCheck) {
+        this.registryCheck = registryCheck;
+    }
+
+    public boolean isConsumerCheck() {
+        return consumerCheck;
+    }
+
+    public void setConsumerCheck(boolean consumerCheck) {
+        this.consumerCheck = consumerCheck;
+    }
+
+    public boolean isProviderCheck() {
+        return providerCheck;
+    }
+
+    public void setProviderCheck(boolean providerCheck) {
+        this.providerCheck = providerCheck;
+    }
+
+    private Map<String, String> methodKeyMapping = new ConcurrentHashMap<>();
+
+    public String getHystrixKeyByMethod(String method) {
+        if (hystrixKeys != null && methodKeyMapping.isEmpty()) {
+            initMapping();
+        }
+
+        return methodKeyMapping.get(method);
+    }
+
+    private void initMapping() {
+        String keyMethodStrings[] = hystrixKeys.split(";");
+        for (String keyMethodString : keyMethodStrings) {
+            String[] keyMethod = keyMethodString.split(":");
+            if (keyMethod.length != 2) continue;
+
+            String key = keyMethod[0];
+            String[] methods = keyMethod[1].split(",");
+            for (String method : methods) {
+                methodKeyMapping.put(method, key);
+            }
+        }
     }
 }

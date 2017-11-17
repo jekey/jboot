@@ -22,6 +22,7 @@ import com.jfinal.plugin.activerecord.Table;
 import com.jfinal.plugin.activerecord.TableMapping;
 import com.jfinal.plugin.ehcache.IDataLoader;
 import io.jboot.Jboot;
+import io.jboot.db.dialect.IJbootModelDialect;
 import io.jboot.exception.JbootAssert;
 import io.jboot.exception.JbootException;
 import io.jboot.utils.ArrayUtils;
@@ -213,7 +214,7 @@ public class JbootModel<M extends JbootModel<M>> extends Model<M> {
         }
         boolean saved = super.save();
         if (saved) {
-            Jboot.me().sendEvent(addAction(), this);
+            Jboot.sendEvent(addAction(), this);
         }
         return saved;
     }
@@ -231,7 +232,7 @@ public class JbootModel<M extends JbootModel<M>> extends Model<M> {
             if (autoCache) {
                 removeCache(get(getPrimaryKey()));
             }
-            Jboot.me().sendEvent(deleteAction(), this);
+            Jboot.sendEvent(deleteAction(), this);
         }
         return deleted;
     }
@@ -272,7 +273,7 @@ public class JbootModel<M extends JbootModel<M>> extends Model<M> {
             if (autoCache) {
                 removeCache(id);
             }
-            Jboot.me().sendEvent(updateAction(), findById(id));
+            Jboot.sendEvent(updateAction(), findById(id));
         }
         return update;
     }
@@ -306,6 +307,15 @@ public class JbootModel<M extends JbootModel<M>> extends Model<M> {
     }
 
 
+    public M findByIdWithoutCache(Object idValue) {
+        return super.findById(idValue);
+    }
+
+
+    private IJbootModelDialect getDialect() {
+        return (IJbootModelDialect) _getConfig().getDialect();
+    }
+
     /**
      * 根据列名和值，查找1条数据
      *
@@ -314,48 +324,49 @@ public class JbootModel<M extends JbootModel<M>> extends Model<M> {
      * @return
      */
     public M findFirstByColumn(String column, Object value) {
-        StringBuilder sqlBuilder = new StringBuilder("SELECT * FROM `");
-        sqlBuilder.append(tableName()).append("` WHERE `").append(column).append("`=?");
-
-        if (hasColumn(COLUMN_CREATED)) {
-            sqlBuilder.append(" ORDER BY created  DESC ");
-        }
-
-        sqlBuilder.append(" LIMIT 1");
-        return findFirst(sqlBuilder.toString(), value);
+        String sql = getDialect().forFindByColumns(tableName(), "*", Columns.create(column, value).getList(), null, 1);
+        return findFirst(sql, value);
     }
 
+    /**
+     * 根据 列和值 查询1条数据
+     *
+     * @param column
+     * @return
+     */
+    public M findFirstByColumn(Column column) {
+        String sql = getDialect().forFindByColumns(tableName(), "*", Columns.create(column).getList(), null, 1);
+        return findFirst(sql, column.getValue());
+    }
 
     /**
-     * 根据列名和值 查询第一条数据
+     * 根据 多列和值，查询1条数据
      *
      * @param columns
      * @return
      */
-    public M findFirstByColumns(Map<String, ?> columns) {
-        StringBuilder sqlBuilder = new StringBuilder("SELECT * FROM `" + tableName() + "` ");
+    public M findFirstByColumns(Columns columns) {
+        String sql = getDialect().forFindByColumns(tableName(), "*", columns.getList(), null, 1);
         LinkedList<Object> params = new LinkedList<Object>();
-        if (ArrayUtils.isNotEmpty(columns)) {
-            sqlBuilder.append(" WHERE ");
-            buildSqlByMap(columns, sqlBuilder, params);
-        }
-        appendDefaultOrderBy(sqlBuilder);
-        sqlBuilder.append(" LIMIT 1");
-        return params.isEmpty() ? findFirst(sqlBuilder.toString()) : findFirst(sqlBuilder.toString(), params.toArray());
-    }
 
-    private void buildSqlByMap(Map<String, ?> columns, StringBuilder sqlBuilder, LinkedList<Object> params) {
-        int index = 0;
-        for (Map.Entry<String, ? extends Object> entry : columns.entrySet()) {
-            sqlBuilder.append(" `" + entry.getKey() + "` = ? ");
-            if (index != columns.size() - 1) {
-                sqlBuilder.append(" AND ");
+        if (ArrayUtils.isNotEmpty(columns.getList())) {
+            for (Column column : columns.getList()) {
+                params.add(column.getValue());
             }
-            params.add(entry.getValue());
-            index++;
         }
+        return findFirst(sql, params.toArray());
     }
 
+
+    /**
+     * 查找全部数据
+     *
+     * @return
+     */
+    public List<M> findAll() {
+        String sql = getDialect().forFindByColumns(tableName(), "*", null, null, null);
+        return find(sql);
+    }
 
     /**
      * 根据列名和值 查询一个列表
@@ -366,16 +377,9 @@ public class JbootModel<M extends JbootModel<M>> extends Model<M> {
      * @return
      */
     public List<M> findListByColumn(String column, Object value, Integer count) {
-        StringBuilder sqlBuilder = new StringBuilder("SELECT * FROM `");
-        sqlBuilder.append(tableName()).append("` WHERE `").append(column).append("`=?");
-
-        if (hasColumn(COLUMN_CREATED)) {
-            sqlBuilder.append(" ORDER BY created DESC ");
-        }
-        if (count != null) {
-            sqlBuilder.append(" LIMIT ").append(count);
-        }
-        return find(sqlBuilder.toString(), value);
+        List<Column> columns = new ArrayList<>();
+        columns.add(Column.create(column, value));
+        return findListByColumns(columns, count);
     }
 
 
@@ -387,17 +391,7 @@ public class JbootModel<M extends JbootModel<M>> extends Model<M> {
      * @return
      */
     public List<M> findListByColumn(Column column, Integer count) {
-        StringBuilder sqlBuilder = new StringBuilder("SELECT * FROM `");
-        sqlBuilder.append(tableName()).append("` WHERE ").append(column.sql());
-
-        if (hasColumn(COLUMN_CREATED)) {
-            sqlBuilder.append(" ORDER BY created DESC ");
-        }
-        if (count != null) {
-            sqlBuilder.append(" LIMIT ").append(count);
-        }
-
-        return find(sqlBuilder.toString(), column.getValue());
+        return findListByColumns(Columns.create(column).getList(), count);
     }
 
 
@@ -422,147 +416,43 @@ public class JbootModel<M extends JbootModel<M>> extends Model<M> {
     }
 
 
-    public List<M> findListByColumns(List<Column> columnList, String orderBy, Integer count) {
-        StringBuilder sqlBuilder = new StringBuilder("SELECT * FROM `" + tableName() + "` ");
-        LinkedList<Object> params = new LinkedList<Object>();
-
-        if (ArrayUtils.isNotEmpty(columnList)) {
-            sqlBuilder.append(" WHERE ");
-            buildSqlByList(columnList, sqlBuilder, params);
-        }
-        if (StringUtils.isNotBlank(orderBy)) {
-            sqlBuilder.append(" ORDER BY ").append(orderBy);
-        } else {
-            appendDefaultOrderBy(sqlBuilder);
-        }
-        if (count != null) {
-            sqlBuilder.append(" LIMIT " + count);
-        }
-        return params.isEmpty() ? find(sqlBuilder.toString()) : find(sqlBuilder.toString(), params.toArray());
-    }
-
-
     public List<M> findListByColumns(Columns columns) {
-        return findListByColumns(columns.getCols());
+        return findListByColumns(columns.getList());
     }
 
     public List<M> findListByColumns(Columns columns, String orderBy) {
-        return findListByColumns(columns.getCols(), orderBy);
+        return findListByColumns(columns.getList(), orderBy);
     }
 
     public List<M> findListByColumns(Columns columns, Integer count) {
-        return findListByColumns(columns.getCols(), count);
+        return findListByColumns(columns.getList(), count);
     }
 
 
     public List<M> findListByColumns(Columns columns, String orderBy, Integer count) {
-        return findListByColumns(columns.getCols(), orderBy, count);
-    }
-
-    private void buildSqlByList(List<Column> columns, StringBuilder sqlBuilder, LinkedList<Object> params) {
-        int index = 0;
-        for (Column column : columns) {
-            sqlBuilder.append(column.sql());
-            if (index != columns.size() - 1) {
-                sqlBuilder.append(" AND ");
-            }
-            params.add(column.getValue());
-            index++;
-        }
-    }
-
-
-    public List<M> findListByColumns(Map<String, ?> columns) {
-        return findListByColumns(columns, null, null);
-    }
-
-    public List<M> findListByColumns(Map<String, ?> columns, Integer count) {
-        return findListByColumns(columns, null, count);
-    }
-
-    public List<M> findListByColumns(Map<String, ?> columns, String orderBy) {
-        return findListByColumns(columns, orderBy, null);
-    }
-
-
-    public List<M> findListByColumns(Map<String, ?> columns, String orderBy, Integer count) {
-        StringBuilder sqlBuilder = new StringBuilder("SELECT * FROM `" + tableName() + "` ");
-        LinkedList<Object> params = new LinkedList<Object>();
-
-        if (ArrayUtils.isNotEmpty(columns)) {
-            sqlBuilder.append(" WHERE ");
-            buildSqlByMap(columns, sqlBuilder, params);
-        }
-        if (StringUtils.isNotBlank(orderBy)) {
-            sqlBuilder.append(" ORDER BY ").append(orderBy);
-        } else {
-            appendDefaultOrderBy(sqlBuilder);
-        }
-        if (count != null) {
-            sqlBuilder.append(" LIMIT " + count);
-        }
-
-        return params.isEmpty() ? find(sqlBuilder.toString()) : find(sqlBuilder.toString(), params.toArray());
-    }
-
-
-    public M findByIdWithoutCache(Object idValue) {
-        return super.findById(idValue);
-    }
-
-    /**
-     * 根据where信息，分页查询数据
-     *
-     * @param pageNumber 页码
-     * @param pageSize   每页显示数量
-     * @param where
-     * @param paras
-     * @return
-     */
-    public Page<M> paginateByWhere(int pageNumber, int pageSize, String where, Object... paras) {
-        String sqlExceptSelect = "FROM `" + tableName() + "` WHERE " + where;
-        if (where.toLowerCase().indexOf(" order ") == -1 && hasColumn(COLUMN_CREATED)) {
-            sqlExceptSelect += " ORDER BY created DESC";
-        }
-        return paginate(pageNumber, pageSize, "SELECT * ", sqlExceptSelect, paras);
-    }
-
-    /**
-     * 根据列信息，分页查询
-     *
-     * @param pageNumber
-     * @param pageSize
-     * @param columns
-     * @return
-     */
-    public Page<M> paginateByColumns(int pageNumber, int pageSize, Map<String, Object> columns) {
-        return paginateByColumns(pageNumber, pageSize, columns, null);
+        return findListByColumns(columns.getList(), orderBy, count);
     }
 
 
     /**
-     * 根据多列信息，分页查询
+     * 根据列信心查询列表
      *
-     * @param pageNumber
-     * @param pageSize
      * @param columns
      * @param orderBy
+     * @param count
      * @return
      */
-    public Page<M> paginateByColumns(int pageNumber, int pageSize, Map<String, ?> columns, String orderBy) {
-        StringBuilder sqlBuilder = new StringBuilder(" FROM `" + tableName() + "` ");
+    public List<M> findListByColumns(List<Column> columns, String orderBy, Integer count) {
         LinkedList<Object> params = new LinkedList<Object>();
+
         if (ArrayUtils.isNotEmpty(columns)) {
-            sqlBuilder.append(" WHERE ");
-            buildSqlByMap(columns, sqlBuilder, params);
+            for (Column column : columns) {
+                params.add(column.getValue());
+            }
         }
-        if (StringUtils.isNotBlank(orderBy)) {
-            sqlBuilder.append(" ORDER BY ").append(orderBy);
-        } else {
-            appendDefaultOrderBy(sqlBuilder);
-        }
-        return params.isEmpty() ? paginate(pageNumber, pageSize, "SELECT * ", sqlBuilder.toString())
-                : paginate(pageNumber, pageSize, "SELECT * ", sqlBuilder.toString(), params.toArray());
+
+        String sql = getDialect().forFindByColumns(tableName(), "*", columns, orderBy, count);
+        return params.isEmpty() ? find(sql) : find(sql, params.toArray());
     }
 
 
@@ -573,10 +463,34 @@ public class JbootModel<M extends JbootModel<M>> extends Model<M> {
      * @param pageSize
      * @return
      */
-    public Page<M> paginate(int pageNumber, int pageSize) {
-        StringBuilder sqlBuilder = new StringBuilder(" FROM `" + tableName() + "` ");
-        appendDefaultOrderBy(sqlBuilder);
-        return paginate(pageNumber, pageSize, "SELECT * ", sqlBuilder.toString());
+    public Page<M> paginate(int pageNumber, int pageSize, String orderBy) {
+        return paginateByColumns(pageNumber, pageSize, null, orderBy);
+    }
+
+
+    /**
+     * 根据某列信息，分页查询数据
+     *
+     * @param pageNumber
+     * @param pageSize
+     * @param column
+     * @return
+     */
+    public Page<M> paginateByColumn(int pageNumber, int pageSize, Column column) {
+        return paginateByColumns(pageNumber, pageSize, Columns.create(column).getList(), null);
+    }
+
+
+    /**
+     * 根据某列信息，分页查询数据
+     *
+     * @param pageNumber
+     * @param pageSize
+     * @param column
+     * @return
+     */
+    public Page<M> paginateByColumn(int pageNumber, int pageSize, Column column, String orderBy) {
+        return paginateByColumns(pageNumber, pageSize, Columns.create(column).getList(), orderBy);
     }
 
 
@@ -603,22 +517,18 @@ public class JbootModel<M extends JbootModel<M>> extends Model<M> {
      * @return
      */
     public Page<M> paginateByColumns(int pageNumber, int pageSize, List<Column> columns, String orderBy) {
-        StringBuilder sqlBuilder = new StringBuilder(" FROM `" + tableName() + "` ");
+        String selectPartSql = getDialect().forPaginateSelect("*");
+        String fromPartSql = getDialect().forPaginateFrom(tableName(), columns, orderBy);
+
         LinkedList<Object> params = new LinkedList<Object>();
 
         if (ArrayUtils.isNotEmpty(columns)) {
-            sqlBuilder.append(" WHERE ");
-            buildSqlByList(columns, sqlBuilder, params);
-
+            for (Column column : columns) {
+                params.add(column.getValue());
+            }
         }
-
-        if (StringUtils.isNotBlank(orderBy)) {
-            sqlBuilder.append(" ORDER BY ").append(orderBy);
-        } else {
-            appendDefaultOrderBy(sqlBuilder);
-        }
-        return params.isEmpty() ? paginate(pageNumber, pageSize, "SELECT * ", sqlBuilder.toString())
-                : paginate(pageNumber, pageSize, "SELECT * ", sqlBuilder.toString(), params.toArray());
+        return params.isEmpty() ? paginate(pageNumber, pageSize, selectPartSql, fromPartSql)
+                : paginate(pageNumber, pageSize, selectPartSql, fromPartSql, params.toArray());
     }
 
 
@@ -627,13 +537,7 @@ public class JbootModel<M extends JbootModel<M>> extends Model<M> {
     }
 
 
-    private void appendDefaultOrderBy(StringBuilder sqlBuilder) {
-        if (hasColumn(COLUMN_CREATED)) {
-            sqlBuilder.append(" ORDER BY created DESC");
-        }
-    }
-
-    private Table table;
+    private transient Table table;
 
     public String tableName() {
         if (table == null) {
@@ -645,7 +549,7 @@ public class JbootModel<M extends JbootModel<M>> extends Model<M> {
         return table.getName();
     }
 
-    private String primaryKey;
+    private transient String primaryKey;
 
     protected String getPrimaryKey() {
         if (primaryKey != null) {
@@ -660,7 +564,7 @@ public class JbootModel<M extends JbootModel<M>> extends Model<M> {
         return primaryKey;
     }
 
-    private Class<?> primaryType;
+    private transient Class<?> primaryType;
 
     public Class<?> getPrimaryType() {
         if (primaryType == null) {

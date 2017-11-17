@@ -18,12 +18,15 @@ package io.jboot.aop.interceptor.cache;
 import com.jfinal.plugin.activerecord.Model;
 import com.jfinal.template.Engine;
 import io.jboot.exception.JbootException;
+import io.jboot.utils.ArrayUtils;
 import io.jboot.utils.StringUtils;
 
 import javax.inject.Named;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -86,7 +89,28 @@ public class Kits {
         clazz = getUsefulClass(clazz);
 
         if (StringUtils.isBlank(key)) {
-            return String.format("%s#%s", clazz.getName(), method.getName());
+
+            if (ArrayUtils.isNullOrEmpty(arguments)) {
+                return String.format("%s#%s", clazz.getName(), method.getName());
+            }
+
+            Class[] paramTypes = method.getParameterTypes();
+            StringBuilder argumentTag = new StringBuilder();
+            int index = 0;
+            for (Object argument : arguments) {
+                String argumentString = converteToString(argument);
+                if (argumentString == null) {
+                    throw new JbootException("not support empty key for annotation @Cacheable,@CacheEvict or @CachePut " +
+                            "at method[" + clazz.getName() + "." + method.getName() + "()] " +
+                            "with argument class " + argument.getClass() + ", " +
+                            "please config key properties in @Cacheable,@CacheEvict or @CachePut annotation.");
+                }
+                argumentTag.append(paramTypes[index++].getClass().getName()).append(":").append(argumentString).append("-");
+            }
+
+            //remove last chat '-'
+            argumentTag.deleteCharAt(argumentTag.length() - 1);
+            return String.format("%s#%s#%s", clazz.getName(), method.getName(), argumentTag);
         }
 
         if (!key.contains("#(") || !key.contains(")")) {
@@ -103,6 +127,53 @@ public class Kits {
         //com.demo.blog.Blog$$EnhancerByCGLIB$$69a17158
 
         return c.getName().indexOf("EnhancerBy") == -1 ? c : c.getSuperclass();
+    }
+
+    static boolean isPrimitive(Class clazz) {
+        return clazz == String.class
+                || clazz == Integer.class
+                || clazz == int.class
+                || clazz == Long.class
+                || clazz == long.class
+                || clazz == Double.class
+                || clazz == double.class
+                || clazz == Float.class
+                || clazz == float.class
+                || clazz == Boolean.class
+                || clazz == boolean.class
+                || clazz == BigDecimal.class
+                || clazz == BigInteger.class
+                || clazz == java.util.Date.class
+                || clazz == java.sql.Date.class
+                || clazz == java.sql.Timestamp.class
+                || clazz == java.sql.Time.class;
+
+    }
+
+    static String converteToString(Object object) {
+        if (object == null) {
+            return "null";
+        }
+        if (!isPrimitive(object.getClass())) {
+            return null;
+        }
+
+        if (object instanceof java.util.Date) {
+            return String.valueOf(((java.util.Date) object).getTime());
+        }
+
+        if (object instanceof java.sql.Date) {
+            return String.valueOf(((java.sql.Date) object).getTime());
+        }
+        if (object instanceof java.sql.Timestamp) {
+            return String.valueOf(((java.sql.Timestamp) object).getTime());
+        }
+        if (object instanceof java.sql.Time) {
+            return String.valueOf(((java.sql.Time) object).getTime());
+        }
+
+        return String.valueOf(object);
+
     }
 
 }

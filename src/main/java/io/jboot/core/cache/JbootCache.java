@@ -22,6 +22,12 @@ import java.util.List;
 
 public interface JbootCache extends com.jfinal.plugin.activerecord.cache.ICache {
 
+    public <T> T get(String cacheName, Object key);
+
+    public void put(String cacheName, Object key, Object value);
+
+    public void put(String cacheName, Object key, Object value, int liveSeconds);
+
     public List getKeys(String cacheName);
 
     public void remove(String cacheName, Object key);
@@ -29,6 +35,8 @@ public interface JbootCache extends com.jfinal.plugin.activerecord.cache.ICache 
     public void removeAll(String cacheName);
 
     public <T> T get(String cacheName, Object key, IDataLoader dataLoader);
+
+    public <T> T get(String cacheName, Object key, IDataLoader dataLoader, int liveSeconds);
 
     public boolean isNoneCache();
 }

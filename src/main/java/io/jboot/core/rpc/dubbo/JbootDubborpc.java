@@ -36,31 +36,35 @@ public class JbootDubborpc extends JbootrpcBase {
     private JbootrpcConfig jbootrpcConfig;
     private ApplicationConfig applicationConfig;
     private RegistryConfig registryConfig;
+    private JbootDubborpcConfig dubboConfig;
 
     public JbootDubborpc() {
         jbootrpcConfig = Jboot.config(JbootrpcConfig.class);
+        dubboConfig = Jboot.config(JbootDubborpcConfig.class);
 
         applicationConfig = new ApplicationConfig();
         applicationConfig.setName("jboot");
+
+        registryConfig = new RegistryConfig();
+        registryConfig.setCheck(jbootrpcConfig.isRegistryCheck());
 
         /**
          * 注册中心的调用模式
          */
         if (jbootrpcConfig.isRegistryCallMode()) {
-            registryConfig = new RegistryConfig();
+
+            registryConfig.setProtocol(jbootrpcConfig.getRegistryType());
             registryConfig.setAddress(jbootrpcConfig.getRegistryAddress());
             registryConfig.setUsername(jbootrpcConfig.getRegistryUserName());
             registryConfig.setPassword(jbootrpcConfig.getRegistryPassword());
         }
-
         /**
-         * 直连调用模式
+         * 直连模式
          */
-        if (jbootrpcConfig.isRedirectCallMode()) {
-            if (StringUtils.isBlank(jbootrpcConfig.getDirectUrl())) {
-                throw new JbootException("directUrl must not be null if you use redirect call mode，please config jboot.rpc.directUrl value");
-            }
+        else if (jbootrpcConfig.isRedirectCallMode()) {
+            registryConfig.setAddress(RegistryConfig.NO_AVAILABLE);
         }
+
 
     }
 
@@ -75,6 +79,7 @@ public class JbootDubborpc extends JbootrpcBase {
             return object;
         }
 
+
         // 注意：ReferenceConfig为重对象，内部封装了与注册中心的连接，以及与服务提供方的连接
         // 引用远程服务
         // 此实例很重，封装了与注册中心的连接以及与提供者的连接，请自行缓存，否则可能造成内存和连接泄漏
@@ -82,6 +87,10 @@ public class JbootDubborpc extends JbootrpcBase {
         reference.setApplication(applicationConfig);
         reference.setInterface(serviceClass);
         reference.setVersion(version);
+        reference.setProxy(jbootrpcConfig.getProxy());
+        reference.setFilter("jbootConsumerOpentracing");
+        reference.setCheck(jbootrpcConfig.isConsumerCheck());
+
 
         /**
          * 注册中心的调用模式
@@ -94,6 +103,9 @@ public class JbootDubborpc extends JbootrpcBase {
          * 直连调用模式
          */
         else if (jbootrpcConfig.isRedirectCallMode()) {
+            if (StringUtils.isBlank(jbootrpcConfig.getDirectUrl())) {
+                throw new JbootException("directUrl must not be null if you use redirect call mode，please config jboot.rpc.directUrl value");
+            }
             reference.setUrl(jbootrpcConfig.getDirectUrl());
         }
 
@@ -112,23 +124,29 @@ public class JbootDubborpc extends JbootrpcBase {
         ProtocolConfig protocolConfig = new ProtocolConfig();
         protocolConfig.setName("dubbo");
         protocolConfig.setPort(port <= 0 ? jbootrpcConfig.getDefaultPort() : port);
-        protocolConfig.setThreads(200);
+        protocolConfig.setThreads(dubboConfig.getProtocolThreads());
+
+        if (StringUtils.isNotBlank(dubboConfig.getProtocolTransporter())) {
+            protocolConfig.setTransporter(dubboConfig.getProtocolTransporter());
+        }
+
+        if (StringUtils.isNotBlank(jbootrpcConfig.getHost())) {
+            protocolConfig.setHost(jbootrpcConfig.getHost());
+        }
 
         //此实例很重，封装了与注册中心的连接，请自行缓存，否则可能造成内存和连接泄漏
         ServiceConfig<T> service = new ServiceConfig<T>();
         service.setApplication(applicationConfig);
 
-        /**
-         * 注册中心的调用模式
-         */
-        if (jbootrpcConfig.isRegistryCallMode()) {
-            service.setRegistry(registryConfig); // 多个注册中心可以用setRegistries()
-        }
+        service.setRegistry(registryConfig); // 多个注册中心可以用setRegistries()
 
         service.setProtocol(protocolConfig); // 多个协议可以用setProtocols()
         service.setInterface(interfaceClass);
         service.setRef((T) object);
         service.setVersion(version);
+        service.setProxy(jbootrpcConfig.getProxy());
+        service.setFilter("jbootProviderOpentracing");
+
 
         // 暴露及注册服务
         service.export();

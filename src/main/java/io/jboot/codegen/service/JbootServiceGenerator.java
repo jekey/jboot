@@ -15,12 +15,10 @@
  */
 package io.jboot.codegen.service;
 
-import com.jfinal.plugin.activerecord.generator.MetaBuilder;
 import com.jfinal.plugin.activerecord.generator.TableMeta;
 import io.jboot.Jboot;
 import io.jboot.codegen.CodeGenHelpler;
 
-import javax.sql.DataSource;
 import java.util.List;
 
 public class JbootServiceGenerator {
@@ -32,7 +30,7 @@ public class JbootServiceGenerator {
         Jboot.setBootArg("jboot.datasource.user", "root");
 
         String basePackage = "io.jboot.codegen.service.test";
-        String modelPackage = "io.jboot.codegen.test.model";
+        String modelPackage = "io.jboot.codegen.model.test";
         run(basePackage, modelPackage);
 
     }
@@ -47,11 +45,11 @@ public class JbootServiceGenerator {
 
 
     private String basePackage;
-    private String modelPacket;
+    private String modelPackage;
 
-    public JbootServiceGenerator(String basePackage, String modelPacket) {
+    public JbootServiceGenerator(String basePackage, String modelPackage) {
         this.basePackage = basePackage;
-        this.modelPacket = modelPacket;
+        this.modelPackage = modelPackage;
 
     }
 
@@ -59,12 +57,11 @@ public class JbootServiceGenerator {
     public void doGenerate(String excludeTables) {
 
         System.out.println("start generate...");
-        DataSource dataSource = CodeGenHelpler.getDatasource();
-        List<TableMeta> tableMetaList = new MetaBuilder(dataSource).build();
+        List<TableMeta> tableMetaList = CodeGenHelpler.createMetaBuilder().build();
         CodeGenHelpler.excludeTables(tableMetaList, excludeTables);
 
-        new JbootServiceInterfaceGenerator(basePackage, modelPacket).generate(tableMetaList);
-        new JbootServiceImplGenerator(basePackage + ".impl", modelPacket).generate(tableMetaList);
+        new JbootServiceInterfaceGenerator(basePackage, modelPackage).generate(tableMetaList);
+        new JbootServiceImplGenerator(basePackage , modelPackage).generate(tableMetaList);
 
 
         System.out.println("service generate finished !!!");

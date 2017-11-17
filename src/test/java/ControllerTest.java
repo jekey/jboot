@@ -16,8 +16,13 @@ public class ControllerTest extends JbootController {
 
         Jboot.setBootArg("jboot.hystrix.url", "/hystrix.stream");
         Jboot.setBootArg("jboot.cache.type", "redis");
+        Jboot.setBootArg("jboot.metrics.url", "/metrics.abc");
         Jboot.setBootArg("jboot.cache.redis.host", "127.0.0.1");
+
+//        ClassScanner.scanClass();
+
         Jboot.run(args);
+
 
 
     }
@@ -28,11 +33,13 @@ public class ControllerTest extends JbootController {
 
     public void index() {
 
-        System.out.println("aabbcc");
+        renderText("hello");
 
-        renderText("hello ddd : " + serviceTest.hello("michael"));
+    }
 
 
+    public void directive() {
+        render("/test.html");
     }
 
 
@@ -42,16 +49,23 @@ public class ControllerTest extends JbootController {
 
 
         @Override
-        @Cacheable(name = "aaa",key = "#(\"key:\" + aaa)")
+        @Cacheable(name = "aaa", key = "#(\"key:\" + aaa)")
         public String hello(String aaa) {
             System.out.println("hello invoked");
             return "aaa" + aaa;
+        }
+
+        @Override
+        public String test1() {
+            return null;
         }
     }
 
 
     public static interface ServiceInter {
         public String hello(String aaa);
+
+        public String test1();
     }
 
 

@@ -17,12 +17,10 @@ package io.jboot.codegen.vomodel;
 
 import com.jfinal.kit.PathKit;
 import com.jfinal.plugin.activerecord.generator.BaseModelGenerator;
-import com.jfinal.plugin.activerecord.generator.MetaBuilder;
 import com.jfinal.plugin.activerecord.generator.TableMeta;
 import io.jboot.Jboot;
 import io.jboot.codegen.CodeGenHelpler;
 
-import javax.sql.DataSource;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -54,28 +52,15 @@ public class JbootVoModeGenerator extends BaseModelGenerator {
         super(basePackage, PathKit.getWebRootPath() + "/src/main/java/" + basePackage.replace(".", "/"));
 
 
-        this.packageTemplate = "%n"
-                + "package %s;%n%n";
+        this.template = "io/jboot/codegen/vomodel/vomodel_template.jf";
 
-        this.classDefineTemplate = "/**%n"
-                + " * Auto generated, do not modify this file.%n"
-                + " */%n"
-                + "@SuppressWarnings(\"serial\")%n"
-                + "public class %s extends JbootVoModel {%n%n"
-
-
-        ;
-
-
-        this.importTemplate = "import io.jboot.db.model.JbootVoModel;%n%n";
     }
 
 
     public void doGenerate(String excludeTables) {
 
         System.out.println("start generate...");
-        DataSource dataSource = CodeGenHelpler.getDatasource();
-        List<TableMeta> tableMetaList = new MetaBuilder(dataSource).build();
+        List<TableMeta> tableMetaList = CodeGenHelpler.createMetaBuilder().build();
         CodeGenHelpler.excludeTables(tableMetaList, excludeTables);
 
         generate(tableMetaList);
@@ -85,16 +70,10 @@ public class JbootVoModeGenerator extends BaseModelGenerator {
     }
 
 
-    @Override
-    protected void genClassDefine(TableMeta tableMeta, StringBuilder ret) {
-        ret.append(String.format(classDefineTemplate,
-                tableMeta.modelName + "Vo"));
-    }
-
-
     /**
      * base model 覆盖写入
      */
+    @Override
     protected void writeToFile(TableMeta tableMeta) throws IOException {
         File dir = new File(baseModelOutputDir);
         if (!dir.exists()) {

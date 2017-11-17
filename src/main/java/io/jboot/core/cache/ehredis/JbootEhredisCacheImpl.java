@@ -78,6 +78,16 @@ public class JbootEhredisCacheImpl extends JbootCacheBase implements JbootmqMess
     }
 
     @Override
+    public void put(String cacheName, Object key, Object value, int liveSeconds) {
+        try {
+            ehcache.put(cacheName, key, value, liveSeconds);
+            redisCache.put(cacheName, key, value, liveSeconds);
+        } finally {
+            Jboot.me().getMq().publish(new JbootEhredisMessage(clientId, JbootEhredisMessage.ACTION_PUT, cacheName, key), channel);
+        }
+    }
+
+    @Override
     public void remove(String cacheName, Object key) {
         try {
             ehcache.remove(cacheName, key);
@@ -111,6 +121,19 @@ public class JbootEhredisCacheImpl extends JbootCacheBase implements JbootmqMess
         return obj;
     }
 
+    @Override
+    public <T> T get(String cacheName, Object key, IDataLoader dataLoader, int liveSeconds) {
+        T obj = get(cacheName, key);
+        if (obj != null) {
+            return obj;
+        }
+
+        obj = (T) dataLoader.load();
+        if (obj != null) {
+            put(cacheName, key, obj, liveSeconds);
+        }
+        return obj;
+    }
 
     @Override
     public void onMessage(String channel, Object obj) {
