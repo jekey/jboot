@@ -1,11 +1,11 @@
 /**
  * Copyright (c) 2015-2017, Michael Yang 杨福海 (fuhai999@gmail.com).
  * <p>
- * Licensed under the GNU Lesser General Public License (LGPL) ,Version 3.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  * <p>
- * http://www.gnu.org/licenses/lgpl-3.0.txt
+ *  http://www.apache.org/licenses/LICENSE-2.0
  * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,7 +35,7 @@ import io.jboot.component.swagger.JbootSwaggerController;
 import io.jboot.config.JbootConfigManager;
 import io.jboot.core.rpc.JbootrpcManager;
 import io.jboot.db.JbootDbManager;
-import io.jboot.schedule.JbootTaskManager;
+import io.jboot.schedule.JbootScheduleManager;
 import io.jboot.server.listener.JbootAppListenerManager;
 import io.jboot.utils.ClassNewer;
 import io.jboot.utils.ClassScanner;
@@ -45,7 +45,6 @@ import io.jboot.web.directive.annotation.JFinalSharedMethod;
 import io.jboot.web.directive.annotation.JFinalSharedObject;
 import io.jboot.web.directive.annotation.JFinalSharedStaticMethod;
 import io.jboot.web.handler.JbootHandler;
-import io.jboot.web.handler.WebInterceptorInjectHandler;
 import io.jboot.web.render.JbootRenderFactory;
 import io.jboot.wechat.JbootAccessTokenCache;
 import io.jboot.wechat.JbootWechatConfig;
@@ -174,10 +173,6 @@ public class JbootAppConfig extends JFinalConfig {
             plugins.add(arp);
         }
 
-        if (JbootTaskManager.me().isCron4jEnable()) {
-            plugins.add(JbootTaskManager.me().getCron4jPlugin());
-        }
-
         JbootAppListenerManager.me().onJfinalPluginConfig(new JfinalPlugins(plugins));
 
     }
@@ -194,7 +189,6 @@ public class JbootAppConfig extends JFinalConfig {
         handlers.add(new JbootHandler());
 
         //用于对jfinal的拦截器进行注入
-        handlers.add(new WebInterceptorInjectHandler());
         handlers.setActionHandler(new JbootActionHandler());
 
         JbootAppListenerManager.me().onHandlerConfig(new JfinalHandlers(handlers));
@@ -211,6 +205,7 @@ public class JbootAppConfig extends JFinalConfig {
          */
         JbootrpcManager.me().init();
         JbootShiroManager.me().init(routeList);
+        JbootScheduleManager.me().init();
 
         /**
          * 发送启动完成通知

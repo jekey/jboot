@@ -1,11 +1,11 @@
 /**
  * Copyright (c) 2015-2017, Michael Yang 杨福海 (fuhai999@gmail.com).
  * <p>
- * Licensed under the GNU Lesser General Public License (LGPL) ,Version 3.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  * <p>
- * http://www.gnu.org/licenses/lgpl-3.0.txt
+ *  http://www.apache.org/licenses/LICENSE-2.0
  * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,8 +16,8 @@
 package io.jboot.core.rpc;
 
 import io.jboot.Jboot;
-import io.jboot.JbootConfig;
 import io.jboot.config.annotation.PropertieConfig;
+import io.jboot.core.serializer.JbootSerializerConfig;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -76,7 +76,7 @@ public class JbootrpcConfig {
     private int defaultPort = 8088;
     private String defaultGroup = "jboot";
     private String defaultVersion = "1.0";
-    private String serializer = Jboot.config(JbootConfig.class).getSerializer();
+    private String serializer = Jboot.config(JbootSerializerConfig.class).getType();
 
     private String proxy = "jboot";
     private String filter;  //多个过滤器请用英文逗号（,）隔开，默认添加opentracing过滤器，用于对rpc分布式调用的追踪

@@ -1,11 +1,11 @@
 /**
  * Copyright (c) 2015-2017, Michael Yang 杨福海 (fuhai999@gmail.com).
  * <p>
- * Licensed under the GNU Lesser General Public License (LGPL) ,Version 3.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  * <p>
- * http://www.gnu.org/licenses/lgpl-3.0.txt
+ *  http://www.apache.org/licenses/LICENSE-2.0
  * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,6 +15,7 @@
  */
 package io.jboot.core.serializer;
 
+import io.jboot.Jboot;
 import io.jboot.core.spi.JbootSpiLoader;
 import io.jboot.exception.JbootAssert;
 import io.jboot.utils.ClassNewer;
@@ -25,8 +26,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class SerializerManager {
 
-    public static final String FST2 = "fst2";
-    public static final String FASTJSON = "fastjson";
 
     private static SerializerManager me;
 
@@ -39,6 +38,11 @@ public class SerializerManager {
         return me;
     }
 
+
+    public ISerializer getSerializer() {
+        JbootSerializerConfig config = Jboot.config(JbootSerializerConfig.class);
+        return getSerializer(config.getType());
+    }
 
     public ISerializer getSerializer(String serializerString) {
 
@@ -71,9 +75,9 @@ public class SerializerManager {
 
 
         switch (serializerString) {
-            case FST2:
+            case JbootSerializerConfig.FST2:
                 return new Fst2Serializer();
-            case FASTJSON:
+            case JbootSerializerConfig.FASTJSON:
                 return new FastjsonSerializer();
             default:
                 return JbootSpiLoader.load(ISerializer.class, serializerString);

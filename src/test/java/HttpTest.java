@@ -17,8 +17,16 @@ public class HttpTest {
 
     @Test
     public void testHttpGet() {
-//        String html = Jboot.httpGet("https://www.baidu.com");
-//        System.out.println(html);
+        String html = Jboot.httpGet("https://www.baidu.com");
+        System.out.println(html);
+    }
+
+
+    @Test
+    public void testOkHttpGet() throws InterruptedException {
+        Jboot.setBootArg("jboot.http.type", "okhttp");
+        String html = Jboot.httpGet("https://www.baidu.com");
+        System.out.println("babbb:" + html);
     }
 
     @Test

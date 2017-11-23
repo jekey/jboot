@@ -1,11 +1,11 @@
 /**
  * Copyright (c) 2015-2017, Michael Yang 杨福海 (fuhai999@gmail.com).
  * <p>
- * Licensed under the GNU Lesser General Public License (LGPL) ,Version 3.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  * <p>
- * http://www.gnu.org/licenses/lgpl-3.0.txt
+ *  http://www.apache.org/licenses/LICENSE-2.0
  * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -97,12 +97,11 @@ public class ClassScanner {
 
         excludeJars.add("jcommander-");
         excludeJars.add("jackson-");
-        excludeJars.add("org.eclipse.jdt.core-");
+        excludeJars.add("org.eclipse.");
         excludeJars.add("javax.servlet.jsp-");
         excludeJars.add("jetty-");
         excludeJars.add("freemarker-");
         excludeJars.add("dom4j-");
-        excludeJars.add("org.apache.taglibs.standard.glassfish-");
         excludeJars.add("amqp-client-");
         excludeJars.add("ons-client-");
         excludeJars.add("hamcrest-core-");
@@ -121,6 +120,10 @@ public class ClassScanner {
         excludeJars.add("sslext-");
         excludeJars.add("logback-");
         excludeJars.add("metrics-");
+        excludeJars.add("jline-");
+        excludeJars.add("zkclient-");
+        excludeJars.add("okhttp-");
+        excludeJars.add("okio-");
     }
 
     private static final Set<String> excludeJarPackages = new HashSet<>();

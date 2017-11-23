@@ -1,11 +1,11 @@
 /**
  * Copyright (c) 2015-2017, Michael Yang 杨福海 (fuhai999@gmail.com).
  * <p>
- * Licensed under the GNU Lesser General Public License (LGPL) ,Version 3.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  * <p>
- * http://www.gnu.org/licenses/lgpl-3.0.txt
+ *  http://www.apache.org/licenses/LICENSE-2.0
  * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,6 +18,7 @@ package io.jboot.config;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.jfinal.kit.*;
+import com.jfinal.log.Log;
 import io.jboot.Jboot;
 import io.jboot.config.annotation.PropertieConfig;
 import io.jboot.config.client.ConfigRemoteReader;
@@ -39,6 +40,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * 用于读取配置信息，包括本地配置信息和分布式远程配置信息
  */
 public class JbootConfigManager {
+
+    private static final Log LOG = Log.getLog(JbootConfigManager.class);
 
     private static JbootConfigManager me = new JbootConfigManager();
 
@@ -82,7 +85,7 @@ public class JbootConfigManager {
             Prop prop = PropKit.use("jboot.properties");
             mainProperties = prop.getProperties();
         } catch (Throwable ex) {
-            LogKit.warn(ex.toString(), ex);
+            LOG.warn("Could not find jboot.properties in your class path.");
             mainProperties = new Properties();
         }
 
